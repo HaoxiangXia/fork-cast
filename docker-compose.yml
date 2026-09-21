@@ -1,0 +1,11 @@
+services:
+  fork-cast:
+    build: .
+    container_name: fork-cast
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env

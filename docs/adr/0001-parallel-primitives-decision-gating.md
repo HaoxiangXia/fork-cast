@@ -1,0 +1,3 @@
+# Parallel System 1 Primitives for Decision Gating
+
+In a closed-set food decision engine, normalizing probabilities over dynamic candidate pools ($N \in [10, 50]$) causes raw probability thresholds to fluctuate wildly, and cannot distinguish between contradictory demands (impasse) and total apathy (indifference). We decided to issue a single Jev System 1 request combining three concurrent atomic primitives—one `Choice` for candidate ranking alongside two `Noul` assertions for request achievability and user indifference—and resolve the final verdict in code via calibrated confidence and relative probability margins. This avoids multiple API round trips while decoupling semantic conflict detection and apathy routing from candidate pool size.

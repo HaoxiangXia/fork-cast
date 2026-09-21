@@ -1,0 +1,3 @@
+# Implicit History Logging and Duel Finality
+
+To eliminate friction in high-fatigue dining decisions while preserving psychological commitment, we decided to implicitly record all settled Decisive Pick and Dilemma Duel verdicts into History upon display (with a single-action Revocation mechanism to rollback), enforce strict single-shot finality on Dilemma Duels without re-spins, and permit unrestricted re-rolls for Blind Box selections while permanently exempting them from History. This prevents confirmation fatigue during normal picks, forces closure when users are caught in a dilemma, and isolates playful random exploration from corrupting the suppression context of actual meals.

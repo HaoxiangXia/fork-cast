@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title id="doc-title">吃了吗</title>
+  <style>
+    /* CSS Reset & Design Tokens */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --bg-tile: #D1DCD6;
+      --machine-shell: #F3F6F3;
+      --machine-border: #1E2721;
+      --steel-dark: #1A241E;
+      --steel-header: #243028;
+      --ink-carbon: #141A16;
+      --ink-muted: #59675F;
+      --stamp-red: #D73318;
+      --stamp-bg: rgba(215, 51, 24, 0.08);
+      --broth-gold: #C27911;
+      --broth-bg: #FEF8EE;
+      --receipt-paper: #FFFFFF;
+      --border-grout: #8E9E94;
+      --border-subtle: #D5DFD8;
+      --green-go: #1A8349;
+    }
+
+    body {
+      background-color: var(--bg-tile);
+      color: var(--ink-carbon);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 12px 10px 24px;
+      user-select: none;
+    }
+
+    /* Mobile Container */
+    .app-container {
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* Machine Header Bar */
+    .machine-header {
+      background: var(--steel-header);
+      color: #FFFFFF;
+      padding: 12px 16px;
+      border-radius: 10px 10px 0 0;
+      border: 2.5px solid var(--machine-border);
+      border-bottom: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .brand-subtitle {
+      font-size: 11px;
+      font-weight: normal;
+      color: var(--ink-muted);
+      margin-left: 8px;
+      line-height: 1.3;
+      max-width: 120px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: #34D399;
+      display: inline-block;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-btn:active {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .nav-btn.gold {
+      color: #FDE047;
+      border-color: rgba(253, 224, 71, 0.5);
+    }
+
+    /* Machine Body */
+    .machine-body {
+      background: var(--machine-shell);
+      border: 2.5px solid var(--machine-border);
+      border-radius: 0 0 14px 14px;
+      padding: 16px 14px 20px;
+      box-shadow: 0 12px 28px rgba(18, 30, 23, 0.16);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Metadata Ribbon */
+    .meta-ribbon {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--ink-muted);
+      border-bottom: 1px solid var(--border-grout);
+      padding-bottom: 8px;
+    }
+
+    .clock-display {
+      font-weight: 700;
+      color: var(--steel-dark);
+    }
+
+    .history-crumb {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 240px;
+    }
+
+    /* Craving Input Zone */
+    .craving-zone {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--steel-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Textarea Box (Prevent iOS Zoom with font-size: 16px) */
+    .textarea-wrapper {
+      position: relative;
+    }
+
+    .craving-textarea {
+      width: 100%;
+      height: 84px;
+      background: #FFFFFF;
+      border: 2px solid var(--machine-border);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 16px;
+      line-height: 1.4;
+      color: var(--ink-carbon);
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .craving-textarea:focus {
+      border-color: var(--stamp-red);
+      box-shadow: 0 0 0 2px rgba(215, 51, 24, 0.15);
+    }
+
+    .craving-textarea::placeholder {
+      color: #9CA3AF;
+      font-size: 14px;
+    }
+
+    /* Session Exclusion Pills */
+    .exclusion-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 0;
+    }
+
+    .excl-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--stamp-red);
+      background: var(--stamp-bg);
+      border: 1px solid rgba(215, 51, 24, 0.35);
+      border-radius: 4px;
+      padding: 2px 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .excl-tag button {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 12px;
+      padding: 2px;
+      min-width: 20px;
+      min-height: 20px;
+    }
+
+    /* Inspiration Tags */
+    .tag-rack {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding-top: 2px;
+    }
+
+    .tag-rack-label {
+      font-size: 11px;
+      color: var(--ink-muted);
+    }
+
+    .quick-tag {
+      background: #FFFFFF;
+      border: 1px solid var(--border-grout);
+      border-radius: 4px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--steel-dark);
+      cursor: pointer;
+      min-height: 30px;
+    }
+
+    .quick-tag:active {
+      background: #E5E7EB;
+    }
+
+    /* Slap Button */
+    .btn-slap {
+      width: 100%;
+      height: 52px;
+      background: var(--stamp-red);
+      color: #FFFFFF;
+      border: 2px solid var(--machine-border);
+      border-radius: 8px;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 0 var(--machine-border);
+      transition: transform 0.05s ease, box-shadow 0.05s ease;
+    }
+
+    .btn-slap:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 var(--machine-border);
+    }
+
+    .btn-slap:disabled {
+      background: #9CA3AF;
+      box-shadow: 0 3px 0 #6B7280;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Dispenser Slit */
+    .dispenser-slot {
+      position: relative;
+      margin: 2px 0;
+      text-align: center;
+    }
+
+    .slot-slit {
+      height: 8px;
+      background: var(--machine-border);
+      border-radius: 4px;
+    }
+
+    .slot-label {
+      display: inline-block;
+      background: var(--machine-shell);
+      padding: 0 10px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      letter-spacing: 1.2px;
+      margin-top: -14px;
+      position: relative;
+    }
+
+    /* Thermal Receipt Ticket */
+    .ticket-card {
+      background: var(--receipt-paper);
+      border: 2px solid var(--machine-border);
+      border-radius: 6px;
+      padding: 18px 14px;
+      position: relative;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: ticketSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes ticketSlide {
+      0% { transform: translateY(-30px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Rubber Stamp */
+    .stamp-seal {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 4px 8px;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.95);
+      animation: stampSlam 0.25s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+    }
+
+    .stamp-seal.decisive {
+      border: 2.5px solid var(--stamp-red);
+      color: var(--stamp-red);
+    }
+
+    .stamp-seal.soft {
+      border: 2.5px solid var(--broth-gold);
+      color: var(--broth-gold);
+    }
+
+    .stamp-seal.impasse {
+      border: 2.5px solid #374151;
+      color: #1F2937;
+    }
+
+    .stamp-seal.indifference {
+      border: 2.5px solid var(--broth-gold);
+      color: var(--broth-gold);
+    }
+
+    @keyframes stampSlam {
+      0% { opacity: 0; transform: scale(2) rotate(-16deg); }
+      70% { opacity: 1; transform: scale(0.95) rotate(-5deg); }
+      100% { opacity: 0.95; transform: scale(1) rotate(-5deg); }
+    }
+
+    .ticket-header {
+      text-align: center;
+      border-bottom: 1.5px dashed #D1D5DB;
+      padding-bottom: 8px;
+    }
+
+    .ticket-brand {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #6B7280;
+    }
+
+    .ticket-time {
+      /* deslop-ignore-next-line 34 */
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+
+    .ticket-verdict-box {
+      text-align: center;
+      padding: 6px 0;
+    }
+
+    .verdict-dish {
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: var(--ink-carbon);
+      margin: 4px 0;
+    }
+
+    .verdict-alt {
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+
+    .ticket-quote {
+      background: #F9FAFB;
+      border-left: 3px solid var(--steel-dark);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #374151;
+    }
+
+    .prob-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      /* deslop-ignore-next-line 34 */
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      color: var(--ink-muted);
+      background: #F3F4F6;
+      padding: 8px 10px;
+      border-radius: 4px;
+      border: 1px dashed #D1D5DB;
+    }
+
+    /* Ticket Actions */
+    .ticket-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 2px;
+    }
+
+    .btn-eat {
+      flex: 1;
+      height: 48px;
+      background: var(--green-go);
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 800;
+      border: 2px solid var(--machine-border);
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--machine-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-eat:active {
+      transform: translateY(3px);
+      box-shadow: 0 0 0 var(--machine-border);
+    }
+
+    .btn-revoke {
+      height: 48px;
+      padding: 0 12px;
+      background: #F3F4F6;
+      color: #4B5563;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #D1D5DB;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-revoke:active {
+      background: #FEE2E2;
+      color: var(--stamp-red);
+    }
+
+    .btn-full {
+      width: 100%;
+      height: 48px;
+      background: var(--steel-dark);
+      color: #FFFFFF;
+      font-size: 14px;
+      font-weight: 800;
+      border: 2px solid var(--machine-border);
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--machine-border);
+    }
+
+    /* Solid Scrim Modals (Zero glassmorphism slop) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 26, 21, 0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+    }
+
+    .modal-box {
+      background: #FFFFFF;
+      border: 2.5px solid var(--machine-border);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.25);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 88vh;
+    }
+
+    .modal-head {
+      background: var(--steel-header);
+      color: #FFFFFF;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #D1D5DB;
+      font-size: 20px;
+      cursor: pointer;
+      font-weight: 700;
+      min-width: 36px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .settings-section {
+      background: #F9FAFB;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chip-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .candidate-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-grout);
+      border-radius: 5px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .candidate-chip button {
+      background: none;
+      border: none;
+      color: #9CA3AF;
+      cursor: pointer;
+      font-size: 15px;
+      min-width: 24px;
+      min-height: 24px;
+    }
+
+    .candidate-chip button:active {
+      color: var(--stamp-red);
+    }
+
+    .add-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .input-clean {
+      flex: 1;
+      height: 42px;
+      padding: 0 10px;
+      border: 2px solid var(--machine-border);
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .input-clean:focus {
+      border-color: var(--stamp-red);
+    }
+
+    .btn-add {
+      height: 42px;
+      padding: 0 14px;
+      background: var(--steel-header);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* Blind Box Modal Specifics */
+    .blindbox-drum {
+      width: 100px;
+      height: 100px;
+      margin: 8px auto;
+      background: #FFFBEB;
+      border: 2.5px dashed var(--broth-gold);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--broth-gold);
+    }
+
+    .spinning {
+      animation: drumSpin 0.35s linear infinite;
+    }
+
+    @keyframes drumSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Duel Wheel Canvas */
+    .wheel-wrapper {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin: 8px auto;
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      color: var(--stamp-red);
+      z-index: 20;
+    }
+
+    /* Toast */
+    .toast-box {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--steel-dark);
+      color: #FFFFFF;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.2s ease;
+      z-index: 2000;
+      white-space: nowrap;
+    }
+
+    .toast-box.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Footer */
+    .page-footer {
+      margin-top: 16px;
+      font-size: 10px;
+      color: var(--ink-muted);
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- TOP HEADER -->
+    <header class="machine-header">
+      <div class="brand-title">
+        <span class="status-dot"></span>
+        <span id="brand-title">吃了吗</span>
+        <span id="brand-subtitle" class="brand-subtitle"></span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-open-blindbox" class="nav-btn gold"><span id="blindbox-nav-label">盲盒</span>(<span id="status-candidate-count">0</span>)</button>
+        <button id="btn-open-settings" class="nav-btn"><span id="settings-nav-label">设置</span></button>
+      </div>
+    </header>
+
+    <!-- MACHINE BODY -->
+    <main class="machine-body">
+
+      <!-- SUB-STATUS & RECENT MEAL RIBBON -->
+      <div class="meta-ribbon">
+        <div id="live-clock" class="clock-display">周一 12:00</div>
+        <div id="recent-meal-tag" class="history-crumb">48H历史：暂无记录</div>
+      </div>
+
+      <!-- CRAVING INPUT ZONE -->
+      <section class="craving-zone">
+        <div class="field-label">
+          <span id="label-input-title">诉求投币口</span>
+        </div>
+
+        <!-- Active Exclusions Pill Box -->
+        <div id="exclusions-box" class="exclusion-bar hidden">
+          <span id="label-excl-prefix" style="font-size: 11px; font-weight: bold; color: var(--stamp-red);">临时排除:</span>
+          <div id="exclusions-pills" style="display: flex; gap: 4px; flex-wrap: wrap;"></div>
+        </div>
+
+        <div class="textarea-wrapper">
+          <textarea
+            id="craving-input"
+            class="craving-textarea"
+            placeholder="“今天好累不想动脑子，想吃点热腾腾的碳水炸弹治愈一下...”"
+          ></textarea>
+        </div>
+
+        <!-- Quick Tags -->
+        <div class="tag-rack">
+          <span id="label-quick-tags" class="tag-rack-label">灵感垫片:</span>
+          <div id="quick-tags-container" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+        </div>
+      </section>
+
+      <!-- SLAP BUTTON -->
+      <button id="btn-decide" class="btn-slap">
+        <span id="btn-decide-text">拍 板 决 策</span>
+      </button>
+
+      <!-- DISPENSER SLIT -->
+      <div class="dispenser-slot">
+        <div class="slot-slit"></div>
+        <span id="label-dispenser-slot" class="slot-label">▼ 出票导槽 ▼</span>
+      </div>
+
+      <!-- TICKET STAGE -->
+      <div id="ticket-stage" class="hidden"></div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer id="footer-text" class="page-footer">
+      吃了吗 · 随性就餐决策 · TYPESAFE JEV
+    </footer>
+
+  </div>
+
+  <!-- REDESIGNED SETTINGS & ROTATION WORKSHOP MODAL -->
+  <div id="settings-modal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span>机箱侧板 · 个人设置与菜单</span>
+        <button id="btn-close-settings" class="modal-close">✕</button>
+      </div>
+      <div class="modal-content">
+
+        <!-- SECTION 1: API KEY & GATEWAY (BYOK) -->
+        <div class="settings-section">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">❖ 算力凭据 (Jev API 密钥)</span>
+            <span id="key-status-indicator" style="font-size: 11px; font-weight: 700; color: #DC2626;">○ 待填入 Key</span>
+          </div>
+          <p style="font-size: 11px; color: var(--ink-muted); line-height: 1.4;">
+            密钥与就餐数据完全保存在你当前手机本地，不走服务器存储，自备自用。
+          </p>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <input id="cfg-api-key" type="password" class="input-clean" placeholder="输入 Jev API Key (apikey_... 或 vck_...)" style="font-size: 12px;" />
+            <button id="btn-toggle-key" type="button" class="btn-revoke" style="height: 42px; padding: 0 10px; font-size: 11px;">显示</button>
+          </div>
+          
+          <!-- Gateway preset selector -->
+          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-muted);">
+              <span>模型网关地址 (可选):</span>
+              <button id="btn-toggle-custom-url" type="button" style="background: none; border: none; color: var(--broth-gold); font-size: 11px; cursor: pointer; font-weight: 600;">展开高级设置</button>
+            </div>
+            <div id="custom-url-box" class="hidden" style="display: flex; flex-direction: column; gap: 6px;">
+              <input id="cfg-base-url" type="text" class="input-clean" placeholder="默认官方直连 (留空即可)" style="font-size: 12px;" />
+              <div style="display: flex; gap: 6px;">
+                <button type="button" class="quick-tag" onclick="setPresetUrl('')" style="flex: 1; text-align: center;">官方直连 (默认)</button>
+                <button type="button" class="quick-tag" onclick="setPresetUrl('https://ai-gateway.vercel.sh/typesafe')" style="flex: 1; text-align: center;">Vercel 网关</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: CANDIDATE POOL (MENU RACK) -->
+        <div class="settings-section">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">❖ 个人候选池 (常吃清单)</span>
+            <span id="cfg-pool-count" style="font-size: 11px; font-weight: 700; color: var(--ink-muted);">共 0 款</span>
+          </div>
+          <div class="add-row">
+            <input id="new-candidate-name" class="input-clean" type="text" placeholder="新增常吃菜品 / 餐馆名" />
+            <button id="btn-add-candidate" class="btn-add">添加</button>
+          </div>
+          <div id="candidate-chips" class="chip-grid" style="max-height: 160px; overflow-y: auto;"></div>
+          <div style="display: flex; justify-content: flex-end; padding-top: 2px;">
+            <button type="button" id="btn-reset-preset-candidates" style="background: none; border: none; color: var(--ink-muted); font-size: 11px; cursor: pointer;">
+              恢复默认 8 款推荐菜单
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTION 3: RECENT HISTORY -->
+        <div class="settings-section">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">❖ 本机就餐历史</span>
+            <button id="btn-clear-history" style="background: none; border: none; color: var(--stamp-red); font-size: 11px; cursor: pointer; font-weight: 600;">清空历史</button>
+          </div>
+          <div id="history-log-list" style="font-size: 11px; color: var(--ink-muted); max-height: 90px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;"></div>
+        </div>
+
+        <!-- SECTION 4: BACKUP & MIGRATION -->
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-export-data" type="button" class="btn-revoke" style="flex: 1; height: 38px; font-size: 11px;">
+            导出配置备份 (JSON)
+          </button>
+          <label class="btn-revoke" style="flex: 1; height: 38px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            导入配置备份
+            <input id="input-import-file" type="file" accept=".json" style="display: none;" />
+          </label>
+        </div>
+
+        <!-- SAVE BUTTON -->
+        <button id="btn-save-settings" type="button" class="btn-eat" style="width: 100%; height: 46px; font-size: 14px;">
+          完成并就绪
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- BLIND BOX MODAL -->
+  <div id="blindbox-modal" class="modal-backdrop hidden">
+    <div class="modal-box" style="text-align: center;">
+      <div class="modal-head">
+        <span>盲盒抽选</span>
+        <button id="btn-close-blindbox" class="modal-close">✕</button>
+      </div>
+      <div class="modal-content">
+        <div id="blindbox-drum" class="blindbox-drum">随机</div>
+        <div id="blindbox-result" class="hidden">
+          <div style="font-size: 11px; color: var(--ink-muted);">天意已决，绝不反悔</div>
+          <div id="blindbox-dish" style="font-size: 24px; font-weight: 900; margin: 6px 0;">--</div>
+          <div style="font-size: 11px; color: var(--broth-gold); background: var(--broth-bg); padding: 3px 8px; border-radius: 12px; display: inline-block;">
+            免记入历史 · 随时重抽
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+          <button id="btn-roll-blindbox" class="btn-eat" style="background: var(--broth-gold);">摇一个</button>
+          <button id="btn-close-blindbox-2" class="btn-revoke">收起</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DUEL MODAL -->
+  <div id="duel-modal" class="modal-backdrop hidden">
+    <div class="modal-box" style="text-align: center;">
+      <div class="modal-head">
+        <span>DILEMMA DUEL · 终局对决</span>
+      </div>
+      <div class="modal-content">
+        <p style="font-size: 12px; color: var(--ink-muted);">势均力敌！轮盘一转定乾坤，单次终态绝不复摇。</p>
+        <div class="wheel-wrapper">
+          <div class="wheel-pointer">▼</div>
+          <!-- deslop-ignore-next-line 19 -->
+          <canvas id="duel-canvas" width="220" height="220" style="border-radius: 50%; border: 2.5px solid var(--machine-border); box-shadow: 0 4px 10px rgba(0,0,0,0.12);"></canvas>
+        </div>
+        <div id="duel-winner-box" class="hidden" style="margin-top: 4px;">
+          <div style="font-size: 11px; color: var(--ink-muted);">对决胜出：</div>
+          <div id="duel-winner-name" style="font-size: 24px; font-weight: 900; color: var(--stamp-red);">--</div>
+        </div>
+        <div style="margin-top: 8px;">
+          <button id="btn-spin-duel" class="btn-slap" style="height: 44px; font-size: 15px;">启动对决轮盘</button>
+          <button id="btn-accept-duel" class="btn-eat hidden" style="width: 100%; height: 44px; font-size: 15px;">接受对决，去吃！</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast-box">
+    <span id="toast-msg">提示消息</span>
+  </div>
+
+  <!-- CLIENT SCRIPT -->
+  <script>
+    const DEFAULT_PRESET_CANDIDATES = [
+      "牛肉拉面", "麦当劳", "麻辣烫", "猪脚饭",
+      "轻食沙拉", "关东煮", "黄焖鸡", "重庆小面"
+    ];
+
+    let appCopy = null;
+    let currentApiKey = '';
+    let currentBaseUrl = '';
+    let currentCandidates = [];
+    let currentHistory = [];
+    let currentExclusions = new Set();
+    let lastDecisionResult = null;
+    let duelContenders = [];
+    let duelWinner = null;
+
+    function getCopy(path, fallback = '') {
+      if (!appCopy) return fallback;
+      const parts = path.split('.');
+      let cur = appCopy;
+      for (const p of parts) {
+        if (cur && typeof cur === 'object' && p in cur) {
+          cur = cur[p];
+        } else {
+          return fallback;
+        }
+      }
+      return typeof cur === 'string' ? cur : fallback;
+    }
+
+    // Local Storage Management
+    function loadLocalState() {
+      currentApiKey = (localStorage.getItem('chilema_api_key') || '').trim();
+      currentBaseUrl = (localStorage.getItem('chilema_base_url') || '').trim();
+
+      const rawCandidates = localStorage.getItem('chilema_candidates');
+      if (rawCandidates) {
+        try {
+          const parsed = JSON.parse(rawCandidates);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            currentCandidates = parsed;
+          } else {
+            currentCandidates = [...DEFAULT_PRESET_CANDIDATES];
+          }
+        } catch (e) {
+          currentCandidates = [...DEFAULT_PRESET_CANDIDATES];
+        }
+      } else {
+        currentCandidates = [...DEFAULT_PRESET_CANDIDATES];
+        localStorage.setItem('chilema_candidates', JSON.stringify(currentCandidates));
+      }
+
+      const rawHist = localStorage.getItem('chilema_history');
+      if (rawHist) {
+        try {
+          const parsed = JSON.parse(rawHist);
+          currentHistory = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          currentHistory = [];
+        }
+      } else {
+        currentHistory = [];
+      }
+
+      updateStatusBadges();
+    }
+
+    function saveLocalState() {
+      localStorage.setItem('chilema_api_key', currentApiKey);
+      localStorage.setItem('chilema_base_url', currentBaseUrl);
+      localStorage.setItem('chilema_candidates', JSON.stringify(currentCandidates));
+      localStorage.setItem('chilema_history', JSON.stringify(currentHistory));
+      updateStatusBadges();
+    }
+
+    function updateStatusBadges() {
+      // Top candidate count badge
+      const countEl = document.getElementById('status-candidate-count');
+      if (countEl) countEl.innerText = currentCandidates.length;
+
+      const modalCountEl = document.getElementById('cfg-pool-count');
+      if (modalCountEl) modalCountEl.innerText = `共 ${currentCandidates.length} 款`;
+
+      // API Key indicator
+      const keyIndicator = document.getElementById('key-status-indicator');
+      if (keyIndicator) {
+        if (currentApiKey) {
+          keyIndicator.innerText = '● 独立算力已就绪';
+          keyIndicator.style.color = '#16A34A';
+        } else {
+          keyIndicator.innerText = '○ 待填入 Key';
+          keyIndicator.style.color = '#DC2626';
+        }
+      }
+
+      // Recent meals ribbon (within 48 hours)
+      const recentBox = document.getElementById('recent-meal-tag');
+      const cutoff = new Date(Date.now() - 48 * 3600 * 1000);
+      const recentMeals = currentHistory.filter(h => {
+        try { return new Date(h.timestamp) >= cutoff; } catch (e) { return true; }
+      });
+
+      if (recentMeals.length > 0) {
+        const names = recentMeals.slice(-3).reverse().map(h => h.candidate).join('、');
+        recentBox.innerText = `48H已食: ${names}`;
+      } else {
+        recentBox.innerText = `48H历史: 暂无记录`;
+      }
+    }
+
+    function getRecentHistoryForApi(hours = 48) {
+      const cutoff = new Date(Date.now() - hours * 3600 * 1000);
+      return currentHistory.filter(h => {
+        try { return new Date(h.timestamp) >= cutoff; } catch (e) { return true; }
+      });
+    }
+
+    async function initCopy() {
+      try {
+        const res = await fetch('/api/copy');
+        if (res.ok) {
+          appCopy = await res.json();
+          applyCopy();
+        }
+      } catch (e) {
+        console.warn('Using default copy:', e);
+      }
+    }
+
+    function applyCopy() {
+      if (!appCopy) return;
+      if (appCopy.brand) {
+        if (appCopy.brand.name) {
+          document.title = appCopy.brand.name;
+          const el = document.getElementById('brand-title');
+          if (el) el.innerText = appCopy.brand.name;
+        }
+        if (appCopy.brand.subtitle) {
+          const el = document.getElementById('brand-subtitle');
+          if (el) el.innerHTML = appCopy.brand.subtitle.replace('：', '：<br/>');
+        }
+        if (appCopy.brand.footer) {
+          const el = document.getElementById('footer-text');
+          if (el) el.innerText = appCopy.brand.footer;
+        }
+      }
+      if (appCopy.nav) {
+        const bbLabel = document.getElementById('blindbox-nav-label');
+        if (bbLabel && appCopy.nav.blind_box) bbLabel.innerText = appCopy.nav.blind_box;
+        const sLabel = document.getElementById('settings-nav-label');
+        if (sLabel && appCopy.nav.settings) sLabel.innerText = appCopy.nav.settings;
+      }
+      if (appCopy.input) {
+        const lTitle = document.getElementById('label-input-title');
+        if (lTitle && appCopy.input.label) lTitle.innerText = appCopy.input.label;
+        const cInput = document.getElementById('craving-input');
+        if (cInput && appCopy.input.placeholder) cInput.placeholder = appCopy.input.placeholder;
+        const qLabel = document.getElementById('label-quick-tags');
+        if (qLabel && appCopy.input.quick_label) qLabel.innerText = appCopy.input.quick_label;
+        const sBtnText = document.getElementById('btn-decide-text');
+        if (sBtnText && appCopy.input.slap_button) sBtnText.innerText = appCopy.input.slap_button;
+        const sSlot = document.getElementById('label-dispenser-slot');
+        if (sSlot && appCopy.input.dispenser_slot) sSlot.innerText = appCopy.input.dispenser_slot;
+        const ePrefix = document.getElementById('label-excl-prefix');
+        if (ePrefix && appCopy.input.exclusion_prefix) ePrefix.innerText = appCopy.input.exclusion_prefix;
+
+        if (Array.isArray(appCopy.input.quick_tags) && appCopy.input.quick_tags.length > 0) {
+          const container = document.getElementById('quick-tags-container');
+          if (container) {
+            container.innerHTML = '';
+            appCopy.input.quick_tags.forEach(t => {
+              const btn = document.createElement('button');
+              btn.className = 'quick-tag';
+              btn.setAttribute('data-text', t.text);
+              btn.innerText = t.label;
+              btn.addEventListener('click', () => {
+                document.getElementById('craving-input').value = t.text;
+                playClickSound();
+              });
+              container.appendChild(btn);
+            });
+          }
+        }
+      }
+    }
+
+    function showToast(msg, duration = 2600) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    function playClickSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      } catch (e) {}
+    }
+
+    function playStampSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(90, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      } catch (e) {}
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+      const w = weekdays[now.getDay()];
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('live-clock').innerText = `${w} ${h}:${m}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // SETTINGS MODAL
+    function openSettingsModal() {
+      document.getElementById('settings-modal').classList.remove('hidden');
+      document.getElementById('cfg-api-key').value = currentApiKey;
+      document.getElementById('cfg-base-url').value = currentBaseUrl;
+      renderCandidateChips();
+      renderHistoryLogs();
+      updateStatusBadges();
+    }
+
+    function closeSettingsModal() {
+      saveSettingsInputs();
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function saveSettingsInputs() {
+      currentApiKey = document.getElementById('cfg-api-key').value.trim();
+      currentBaseUrl = document.getElementById('cfg-base-url').value.trim();
+      saveLocalState();
+    }
+
+    function saveSettingsAndNotify() {
+      saveSettingsInputs();
+      showToast('设置与菜单已保存在本机！');
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function toggleKeyVisibility() {
+      const input = document.getElementById('cfg-api-key');
+      const btn = document.getElementById('btn-toggle-key');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerText = '隐藏';
+      } else {
+        input.type = 'password';
+        btn.innerText = '显示';
+      }
+    }
+
+    function setPresetUrl(url) {
+      document.getElementById('cfg-base-url').value = url;
+      currentBaseUrl = url;
+      saveLocalState();
+      showToast(url ? '已切换至 Vercel 网关' : '已恢复官方直连');
+    }
+
+    function renderCandidateChips() {
+      const container = document.getElementById('candidate-chips');
+      container.innerHTML = '';
+      currentCandidates.forEach(name => {
+        const chip = document.createElement('div');
+        chip.className = 'candidate-chip';
+        chip.innerHTML = `
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${name}</span>
+          <button onclick="removeCandidate('${name}')">✕</button>
+        `;
+        container.appendChild(chip);
+      });
+      document.getElementById('cfg-pool-count').innerText = `共 ${currentCandidates.length} 款`;
+    }
+
+    function addCandidate() {
+      const input = document.getElementById('new-candidate-name');
+      const name = input.value.trim();
+      if (!name) return;
+      if (currentCandidates.includes(name)) {
+        showToast('该选项已在候选池中');
+        return;
+      }
+      currentCandidates.push(name);
+      input.value = '';
+      saveLocalState();
+      renderCandidateChips();
+      showToast(`已添加【${name}】`);
+    }
+
+    function removeCandidate(name) {
+      currentCandidates = currentCandidates.filter(c => c !== name);
+      saveLocalState();
+      renderCandidateChips();
+      showToast(`已移除【${name}】`);
+    }
+
+    function resetPresetCandidates() {
+      currentCandidates = [...DEFAULT_PRESET_CANDIDATES];
+      saveLocalState();
+      renderCandidateChips();
+      showToast('已恢复预设 8 款推荐菜单');
+    }
+
+    function renderHistoryLogs() {
+      const container = document.getElementById('history-log-list');
+      container.innerHTML = '';
+      if (currentHistory.length === 0) {
+        container.innerHTML = '<div style="padding: 6px 0; color: #9CA3AF;">暂无用餐记录</div>';
+        return;
+      }
+      currentHistory.slice(-8).reverse().forEach(h => {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.padding = '3px 0';
+        item.style.borderBottom = '1px dashed #E5E7EB';
+        const tStr = (h.timestamp || '').slice(5, 16).replace('T', ' ');
+        item.innerHTML = `
+          <span style="font-weight: 600; color: var(--steel-dark);">${h.candidate}</span>
+          <span style="font-size: 10px; color: #9CA3AF;">${tStr}</span>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function clearLocalHistory() {
+      currentHistory = [];
+      saveLocalState();
+      renderHistoryLogs();
+      showToast('已清空用餐历史');
+    }
+
+    // BACKUP & EXPORT/IMPORT
+    function exportBackup() {
+      const data = {
+        api_key: currentApiKey,
+        base_url: currentBaseUrl,
+        candidates: currentCandidates,
+        history: currentHistory,
+        exported_at: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chilema_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('配置备份已导出！');
+    }
+
+    function importBackup(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          if (data.api_key) currentApiKey = data.api_key;
+          if (typeof data.base_url === 'string') currentBaseUrl = data.base_url;
+          if (Array.isArray(data.candidates) && data.candidates.length > 0) currentCandidates = data.candidates;
+          if (Array.isArray(data.history)) currentHistory = data.history;
+
+          saveLocalState();
+          openSettingsModal();
+          showToast('配置备份已成功恢复！');
+        } catch (err) {
+          showToast('导入失败，请检查 JSON 格式');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    }
+
+    // EXCLUSIONS
+    function renderExclusions() {
+      const box = document.getElementById('exclusions-box');
+      const pills = document.getElementById('exclusions-pills');
+      pills.innerHTML = '';
+      if (currentExclusions.size === 0) {
+        box.classList.add('hidden');
+        return;
+      }
+      box.classList.remove('hidden');
+      currentExclusions.forEach(item => {
+        const p = document.createElement('span');
+        p.className = 'excl-tag';
+        p.innerHTML = `${item} <button onclick="removeExclusion('${item}')">✕</button>`;
+        pills.appendChild(p);
+      });
+    }
+
+    function removeExclusion(item) {
+      currentExclusions.delete(item);
+      renderExclusions();
+      showToast(`已恢复【${item}】`);
+    }
+
+    // DECIDE FLOW
+    async function submitDecision() {
+      const craving = document.getElementById('craving-input').value.trim();
+      if (!craving) {
+        showToast('请先输入几句就餐想法');
+        return;
+      }
+
+      // Check BYOK API Key
+      if (!currentApiKey) {
+        showToast('请先在设置中填入你的 Jev API Key');
+        openSettingsModal();
+        return;
+      }
+
+      if (currentCandidates.length === 0) {
+        showToast('候选池为空，请先在设置中添加几款常吃菜品');
+        openSettingsModal();
+        return;
+      }
+
+      playClickSound();
+      const btn = document.getElementById('btn-decide');
+      const btnText = document.getElementById('btn-decide-text');
+      btn.disabled = true;
+      btnText.innerText = '正在调动 JEV 裁决...';
+
+      try {
+        const res = await fetch('/api/decide', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            craving: craving,
+            exclusions: Array.from(currentExclusions),
+            candidates: currentCandidates,
+            recent_history: getRecentHistoryForApi(48),
+            api_key: currentApiKey,
+            base_url: currentBaseUrl
+          })
+        });
+
+        const data = await res.json();
+        lastDecisionResult = data;
+        btn.disabled = false;
+        btnText.innerText = '拍 板 决 策';
+
+        if (data.verdict === 'dilemma_duel') {
+          duelContenders = data.alternatives && data.alternatives.length >= 2 ? data.alternatives : [data.primary];
+          duelWinner = data.primary;
+          openDuelModal();
+        } else {
+          renderTicket(data);
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btnText.innerText = '拍 板 决 策';
+        showToast('请求失败，请检查网络与设置');
+      }
+    }
+
+    function renderTicket(data) {
+      const stage = document.getElementById('ticket-stage');
+      stage.classList.remove('hidden');
+
+      // Auto-log to client history if verdict was accepted/logged
+      if (data.auto_logged && data.history_entry) {
+        currentHistory.push(data.history_entry);
+        saveLocalState();
+      }
+
+      const now = new Date();
+      const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+      let stampMarkup = '';
+      let actionButtons = '';
+      let probRows = '';
+
+      const stampText = getCopy('ticket.stamps.' + data.verdict, '拍板落定');
+      const btnEatText = getCopy('ticket.actions.eat', '去吃！');
+      const btnRevokeText = getCopy('ticket.actions.revoke', '撤销并排除');
+      const btnRefocusText = getCopy('ticket.actions.refocus', '重新整理需求');
+      const btnBlindBoxText = getCopy('ticket.actions.draw_blind_box', '直接抽个盲盒');
+
+      if (data.verdict === 'decisive_pick') {
+        stampMarkup = `<div class="stamp-seal decisive">${stampText}</div>`;
+        actionButtons = `
+          <div class="ticket-actions">
+            <button onclick="acceptMeal('${data.primary}')" class="btn-eat">${btnEatText}</button>
+            <button onclick="revokeDecision('${data.primary}')" class="btn-revoke">${btnRevokeText}</button>
+          </div>
+        `;
+      } else if (data.verdict === 'soft_pick') {
+        stampMarkup = `<div class="stamp-seal soft">${stampText}</div>`;
+        actionButtons = `
+          <div class="ticket-actions">
+            <button onclick="acceptMeal('${data.primary}')" class="btn-eat">${btnEatText}</button>
+            <button onclick="revokeDecision('${data.primary}')" class="btn-revoke">${btnRevokeText}</button>
+          </div>
+        `;
+      } else if (data.verdict === 'impasse') {
+        stampMarkup = `<div class="stamp-seal impasse">${stampText}</div>`;
+        actionButtons = `
+          <div style="padding-top: 2px;">
+            <button onclick="refocusInput()" class="btn-full">${btnRefocusText}</button>
+          </div>
+        `;
+      } else if (data.verdict === 'indifference') {
+        stampMarkup = `<div class="stamp-seal indifference">${stampText}</div>`;
+        actionButtons = `
+          <div style="padding-top: 2px;">
+            <button onclick="openBlindBoxModal()" class="btn-full" style="background: var(--broth-gold);">${btnBlindBoxText}</button>
+          </div>
+        `;
+      }
+
+      if (data.probabilities && Object.keys(data.probabilities).length > 0) {
+        const topPairs = Object.entries(data.probabilities)
+          .sort((a,b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([k,v]) => `${k}: ${(v*100).toFixed(0)}%`)
+          .join('  |  ');
+        probRows = `
+          <div class="prob-breakdown">
+            <div style="display: flex; justify-content: space-between; font-weight: 700; color: var(--steel-dark);">
+              <span>${getCopy('ticket.labels.confidence', 'JEV 校准置信度')}</span>
+              <span>${(data.confidence*100).toFixed(0)}%</span>
+            </div>
+            <div style="font-size: 10px; color: var(--ink-muted); line-height: 1.3;">
+              ${getCopy('ticket.labels.distribution', '候选分布:')} ${topPairs}
+            </div>
+          </div>
+        `;
+      }
+
+      const dishTitle = data.primary ? data.primary : (data.verdict === 'impasse' ? '喝杯热水' : '全池随选');
+
+      stage.innerHTML = `
+        <div class="ticket-card">
+          ${stampMarkup}
+          <div class="ticket-header">
+            <div class="ticket-brand">${getCopy('ticket.header_brand', '吃了吗 · 专属餐券')}</div>
+            <div class="ticket-time">${timeStr}</div>
+          </div>
+          <div class="ticket-verdict-box">
+            <div class="verdict-dish">${dishTitle}</div>
+            ${data.alternatives && data.alternatives.length > 0 ? `<div class="verdict-alt">${getCopy('ticket.labels.alternatives_prefix', '备选:')} ${data.alternatives.join('、')}</div>` : ''}
+          </div>
+          <div class="ticket-quote">“${data.message}”</div>
+          ${probRows}
+          ${actionButtons}
+        </div>
+      `;
+
+      playStampSound();
+      updateStatusBadges();
+    }
+
+    function acceptMeal(name) {
+      playClickSound();
+      const toastMsg = getCopy('toasts.accepted', '已选定：【{candidate}】').replace('{candidate}', name);
+      showToast(toastMsg);
+      document.getElementById('ticket-stage').classList.add('hidden');
+      document.getElementById('craving-input').value = '';
+      updateStatusBadges();
+    }
+
+    function revokeDecision(name) {
+      playClickSound();
+      // Pop last recorded meal from local client history
+      if (currentHistory.length > 0) {
+        currentHistory.pop();
+        saveLocalState();
+      }
+
+      currentExclusions.add(name);
+      renderExclusions();
+      document.getElementById('ticket-stage').classList.add('hidden');
+      document.getElementById('craving-input').focus();
+
+      const toastMsg = getCopy('toasts.revoked', '已撤销【{candidate}】，本次已临时排除').replace('{candidate}', name);
+      showToast(toastMsg);
+      updateStatusBadges();
+    }
+
+    function refocusInput() {
+      document.getElementById('ticket-stage').classList.add('hidden');
+      document.getElementById('craving-input').focus();
+    }
+
+    // DUEL WHEEL
+    let wheelSpinning = false;
+
+    function openDuelModal() {
+      const modal = document.getElementById('duel-modal');
+      modal.classList.remove('hidden');
+      document.getElementById('btn-spin-duel').classList.remove('hidden');
+      document.getElementById('btn-accept-duel').classList.add('hidden');
+      document.getElementById('duel-winner-box').classList.add('hidden');
+      drawWheel(0);
+    }
+
+    function drawWheel(rotation) {
+      const canvas = document.getElementById('duel-canvas');
+      const ctx = canvas.getContext('2d');
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const r = cx - 4;
+      const n = duelContenders.length;
+      const arc = (2 * Math.PI) / n;
+      const colors = ['#D73318', '#C27911', '#1A241E', '#0284C7'];
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < n; i++) {
+        const angle = rotation + i * arc;
+        ctx.beginPath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, angle, angle + arc);
+        ctx.lineTo(cx, cy);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(duelContenders[i], r - 14, 4);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+      ctx.strokeStyle = '#1E2721';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    function spinWheel() {
+      if (wheelSpinning) return;
+      wheelSpinning = true;
+      playClickSound();
+
+      document.getElementById('btn-spin-duel').classList.add('hidden');
+
+      const targetIndex = duelContenders.indexOf(duelWinner);
+      const safeIndex = targetIndex >= 0 ? targetIndex : 0;
+      const n = duelContenders.length;
+      const arc = (2 * Math.PI) / n;
+      const targetMiddle = -Math.PI / 2 - (safeIndex * arc + arc / 2);
+      const totalRotations = 6 * 2 * Math.PI;
+      const finalAngle = totalRotations + targetMiddle;
+
+      const duration = 2800;
+      const startTime = performance.now();
+
+      function animate(time) {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const currentAngle = ease * finalAngle;
+
+        drawWheel(currentAngle);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          wheelSpinning = false;
+          playStampSound();
+          document.getElementById('duel-winner-box').classList.remove('hidden');
+          document.getElementById('duel-winner-name').innerText = duelWinner;
+          document.getElementById('btn-accept-duel').classList.remove('hidden');
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    document.getElementById('btn-spin-duel').addEventListener('click', spinWheel);
+    document.getElementById('btn-accept-duel').addEventListener('click', () => {
+      document.getElementById('duel-modal').classList.add('hidden');
+      renderTicket(lastDecisionResult);
+    });
+
+    // BLIND BOX (Client-Side Instant Roll)
+    function openBlindBoxModal() {
+      document.getElementById('blindbox-modal').classList.remove('hidden');
+      document.getElementById('blindbox-result').classList.add('hidden');
+      document.getElementById('blindbox-drum').innerText = '随机';
+      rollBlindBox();
+    }
+
+    function rollBlindBox() {
+      const drum = document.getElementById('blindbox-drum');
+      drum.classList.add('spinning');
+      playClickSound();
+
+      const available = currentCandidates.filter(c => !currentExclusions.has(c));
+      if (available.length === 0) {
+        drum.classList.remove('spinning');
+        showToast('无可用菜品开盲盒');
+        return;
+      }
+
+      const chosen = available[Math.floor(Math.random() * available.length)];
+
+      setTimeout(() => {
+        drum.classList.remove('spinning');
+        drum.innerText = '完成';
+        document.getElementById('blindbox-result').classList.remove('hidden');
+        document.getElementById('blindbox-dish').innerText = chosen;
+        playStampSound();
+      }, 400);
+    }
+
+    document.getElementById('btn-open-blindbox').addEventListener('click', openBlindBoxModal);
+    document.getElementById('btn-roll-blindbox').addEventListener('click', rollBlindBox);
+    document.getElementById('btn-close-blindbox').addEventListener('click', () => {
+      document.getElementById('blindbox-modal').classList.add('hidden');
+    });
+    document.getElementById('btn-close-blindbox-2').addEventListener('click', () => {
+      document.getElementById('blindbox-modal').classList.add('hidden');
+    });
+
+    // SETTINGS DRAWER LISTENERS
+    document.getElementById('btn-open-settings').addEventListener('click', openSettingsModal);
+    document.getElementById('btn-close-settings').addEventListener('click', closeSettingsModal);
+    document.getElementById('btn-save-settings').addEventListener('click', saveSettingsAndNotify);
+    document.getElementById('btn-toggle-key').addEventListener('click', toggleKeyVisibility);
+    document.getElementById('btn-toggle-custom-url').addEventListener('click', () => {
+      const box = document.getElementById('custom-url-box');
+      box.classList.toggle('hidden');
+    });
+    document.getElementById('btn-add-candidate').addEventListener('click', addCandidate);
+    document.getElementById('new-candidate-name').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addCandidate();
+    });
+    document.getElementById('btn-reset-preset-candidates').addEventListener('click', resetPresetCandidates);
+    document.getElementById('btn-clear-history').addEventListener('click', clearLocalHistory);
+    document.getElementById('btn-export-data').addEventListener('click', exportBackup);
+    document.getElementById('input-import-file').addEventListener('change', importBackup);
+
+    // DECIDE
+    document.getElementById('btn-decide').addEventListener('click', submitDecision);
+    document.getElementById('craving-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        submitDecision();
+      }
+    });
+
+    // INITIAL LOAD
+    loadLocalState();
+    initCopy();
+  </script>
+</body>
+</html>
