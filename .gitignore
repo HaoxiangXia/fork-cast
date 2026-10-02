@@ -16,6 +16,7 @@ wheels/
 
 # Runtime and local data
 data/history.json
+data/quota.json
 *.tmp
 
 # Cache & test
@@ -25,3 +26,7 @@ htmlcov/
 
 # OS
 .DS_Store
+
+# Demo prototypes
+docs/demo-flat.html
+demo*
