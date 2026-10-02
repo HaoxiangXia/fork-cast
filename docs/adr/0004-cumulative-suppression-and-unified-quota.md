@@ -1,0 +1,3 @@
+# Cumulative Fatigue Suppression and Unified Compute Quota
+
+To mirror natural human dining psychology while protecting shared server operational costs, we decided that candidate frequency within the Suppression Window compounds fatigue penalties—meaning repeated meals within the window are penalized progressively more harshly than single occurrences—and that the 10 daily free evaluations form a single unified quota across all System 1 models rather than an allowance per model. This prevents monotonous decision loops when users frequently eat the same food and prevents rate-limit evasion through trivial model switching while keeping the quota model intuitive and predictable for end users.

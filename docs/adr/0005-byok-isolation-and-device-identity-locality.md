@@ -1,0 +1,3 @@
+# BYOK Failure Isolation and Device Identity Locality
+
+To maintain explicit accountability and prevent compute quota leakage, we decided that client device identities (`device_id`) remain strictly local to physical browser instances and are excluded from exported configuration backups, and that upstream failures on user-provided credentials (BYOK) fail fast rather than silently falling back to consume server-funded Free Quota. This prevents multi-device quota pooling through shared backup files, ensures immediate visibility when personal credentials expire or encounter rate limits, and preserves a strict boundary between public server compute and private BYOK execution.

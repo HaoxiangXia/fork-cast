@@ -1,0 +1,3 @@
+# Candidate Pool Capacity Cap and Cascade Exhaustion Invariant
+
+To prevent combinatorial explosion and latency degradation in concurrent System 1 `Choice` evaluation while preserving clear boundary semantics during user rejection loops, we decided to enforce a strict hard cap of 36 items on the Candidate Pool (`CANDIDATE_POOL_CAP = 36`) and resolve total pool exclusion under repeated revocations strictly as an `Impasse`. Capping candidates at 36 bounds primitive token payloads and inference latency without restricting diverse rotation diets, while treating total pool depletion as an explicit Impasse honors user rejection intent rather than silently clearing exclusions or forcing a random selection.

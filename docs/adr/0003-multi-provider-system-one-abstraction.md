@@ -1,0 +1,3 @@
+# Multi-Provider System 1 Decision Model Abstraction
+
+To avoid vendor lock-in to TypeSafe Jev without duplicating HTTP client code, we decided to generalize our decision layer to support any System 1 model (specifically TypeSafe Jev and Liquid AI D1) and route both through the existing `typesafe-sdk` transport with configurable base URLs and timeouts. Because both providers adhere to the identical single-shot System 1 protocol—evaluating `state` against concurrent `choice` and `noul` primitives—treating System 1 as an architectural protocol rather than a single proprietary product allows runtime model switching without rewriting client-side decision gating or maintaining bespoke HTTP clients.
