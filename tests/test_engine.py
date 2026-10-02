@@ -86,3 +86,78 @@ async def test_engine_session_exclusions(tmp_path):
 
     assert res.primary != "麦当劳"
     assert "麦当劳" not in res.probabilities
+
+
+def test_d1_config_and_url_normalization():
+    from fork_cast.config import normalize_base_url, resolve_model_name, is_d1_model
+
+    assert normalize_base_url("https://api.liquid.ai/decisions/v1/systemone", is_liquid=True) == "https://api.liquid.ai/decisions"
+    assert normalize_base_url("https://api.liquid.ai/decisions/v1", is_liquid=True) == "https://api.liquid.ai/decisions"
+    assert normalize_base_url("https://api.liquid.ai/decisions", is_liquid=True) == "https://api.liquid.ai/decisions"
+    assert normalize_base_url("https://api.liquid.ai", is_liquid=True) == "https://api.liquid.ai/decisions"
+    assert normalize_base_url("https://api.typesafe.ai/v1/systemone") == "https://api.typesafe.ai"
+
+    assert resolve_model_name("d1") == "d1:free"
+    assert resolve_model_name("d1:free") == "d1:free"
+    assert resolve_model_name("jev") == "jev-latest"
+    assert resolve_model_name("jev-latest") == "jev-latest"
+
+    assert is_d1_model("d1") is True
+    assert is_d1_model("d1:free") is True
+    assert is_d1_model("jev-latest") is False
+
+
+@pytest.mark.asyncio
+async def test_engine_d1_mock_decision(tmp_path):
+    cs = CandidateStorage(file_path=tmp_path / "candidates.json")
+    hs = HistoryStorage(file_path=tmp_path / "history.json")
+    cs.save_candidates(["牛肉拉面", "麦当劳"])
+
+    engine = DecisionEngine(candidate_storage=cs, history_storage=hs, mock=True, model="d1:free")
+    res = await engine.decide("想吃麦当劳快餐")
+
+    assert res.model == "d1:free"
+    assert res.verdict == VerdictType.DECISIVE_PICK
+    assert res.primary == "麦当劳"
+
+
+@pytest.mark.asyncio
+async def test_engine_d1_wire_call(tmp_path):
+    from unittest.mock import AsyncMock, patch, MagicMock
+
+    cs = CandidateStorage(file_path=tmp_path / "candidates.json")
+    hs = HistoryStorage(file_path=tmp_path / "history.json")
+    cs.save_candidates(["牛肉拉面", "麦当劳"])
+
+    engine = DecisionEngine(candidate_storage=cs, history_storage=hs, mock=False)
+
+    fake_resp = MagicMock()
+    fake_resp.answers = {
+        "is_achievable": MagicMock(noul=0.95),
+        "is_indifferent": MagicMock(noul=0.05),
+        "candidate_choice": MagicMock(
+            confidence=0.88,
+            probabilities={"麦当劳": 0.85, "牛肉拉面": 0.15}
+        )
+    }
+
+    with patch("fork_cast.engine.AsyncTypeSafeClient") as MockClient:
+        mock_instance = MagicMock()
+        mock_instance.system_one = AsyncMock(return_value=fake_resp)
+        MockClient.return_value = mock_instance
+
+        res = await engine.decide(
+            craving="想吃麦当劳炸鸡",
+            api_key="liquid_test_key",
+            base_url="https://api.liquid.ai/decisions/v1/systemone",
+            model="d1:free"
+        )
+
+        MockClient.assert_called_once_with(
+            api_key="liquid_test_key",
+            base_url="https://api.liquid.ai/decisions",
+            timeout=60.0
+        )
+        assert mock_instance.system_one.call_args.kwargs["model"] == "d1:free"
+        assert res.model == "d1:free"
+        assert res.primary == "麦当劳"

@@ -3,7 +3,19 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul
-from fork_cast.config import TYPESAFE_API_KEY, JEV_MODEL, TYPESAFE_BASE_URL
+from fork_cast.config import (
+    TYPESAFE_API_KEY,
+    JEV_MODEL,
+    TYPESAFE_BASE_URL,
+    LIQUID_API_KEY,
+    D1_MODEL,
+    LIQUID_BASE_URL,
+    DEFAULT_MODEL,
+    HISTORY_WINDOW_HOURS,
+    is_d1_model,
+    resolve_model_name,
+    normalize_base_url,
+)
 from fork_cast.models import (
     VerdictType,
     DecisionResponse,
@@ -20,14 +32,14 @@ class DecisionEngine:
         history_storage: Optional[HistoryStorage] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        model: str = JEV_MODEL,
+        model: Optional[str] = None,
         mock: bool = False
     ):
         self.candidate_storage = candidate_storage or CandidateStorage()
         self.history_storage = history_storage or HistoryStorage()
-        self.api_key = api_key or TYPESAFE_API_KEY
-        self.base_url = base_url or TYPESAFE_BASE_URL
-        self.model = model
+        self.api_key = api_key
+        self.base_url = base_url
+        self.model = model or DEFAULT_MODEL
         self.mock = mock
 
     def _create_history_entry(
@@ -58,7 +70,9 @@ class DecisionEngine:
         candidates: Optional[List[str]] = None,
         recent_history: Optional[List[HistoryEntry]] = None,
         api_key: Optional[str] = None,
-        base_url: Optional[str] = None
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+        history_window_hours: Optional[int] = None
     ) -> DecisionResponse:
         exclusions = [e.strip() for e in (exclusions or []) if e.strip()]
         persist_server = (candidates is None)
@@ -68,6 +82,9 @@ class DecisionEngine:
         else:
             all_candidates = self.candidate_storage.load_candidates()
 
+        active_model = resolve_model_name(model or self.model)
+        is_d1 = is_d1_model(active_model)
+
         effective_pool = [c for c in all_candidates if c not in exclusions]
 
         if not effective_pool:
@@ -76,7 +93,8 @@ class DecisionEngine:
                 primary=None,
                 alternatives=[],
                 message=copy_manager.get_message("empty"),
-                auto_logged=False
+                auto_logged=False,
+                model=active_model
             )
 
         if len(effective_pool) == 1:
@@ -93,7 +111,8 @@ class DecisionEngine:
                 is_indifferent=0.0,
                 auto_logged=True,
                 history_entry_id=entry.id,
-                history_entry=entry
+                history_entry=entry,
+                model=active_model
             )
 
         if craving.strip() == "随便来个，吃啥都行无所谓" or "随便都行" in craving or "随便来个" in craving:
@@ -110,30 +129,42 @@ class DecisionEngine:
                 is_indifferent=1.0,
                 auto_logged=True,
                 history_entry_id=entry.id,
-                history_entry=entry
+                history_entry=entry,
+                model=active_model
             )
 
-        hist_list = recent_history if recent_history is not None else self.history_storage.get_recent_history()
+        hist_list = (
+            recent_history
+            if recent_history is not None
+            else self.history_storage.get_recent_history(hours=history_window_hours or HISTORY_WINDOW_HOURS)
+        )
         state = build_state_context(craving, hist_list, exclusions)
 
-        active_key = api_key.strip() if (api_key and api_key.strip()) else self.api_key
-        active_base_url = base_url.strip() if (base_url and base_url.strip()) else self.base_url
+        # Resolve active API key
+        if api_key and api_key.strip():
+            active_key = api_key.strip()
+        elif self.api_key:
+            active_key = self.api_key.strip()
+        elif is_d1:
+            active_key = LIQUID_API_KEY or TYPESAFE_API_KEY
+        else:
+            active_key = TYPESAFE_API_KEY or LIQUID_API_KEY
 
-        if active_base_url:
-            raw_url = active_base_url.rstrip("/")
-            for sfx in ["/v1/systemone", "/systemone", "/v1"]:
-                if raw_url.endswith(sfx):
-                    raw_url = raw_url[:-len(sfx)].rstrip("/")
-                    break
-            active_base_url = raw_url
-        elif active_key:
-            if any(active_key.startswith(p) for p in ["vck_", "vcl_", "vercel_"]):
-                active_base_url = "https://ai-gateway.vercel.sh/typesafe"
-            else:
-                active_base_url = "https://api.typesafe.ai"
+        # Resolve active Base URL
+        req_base_url = (base_url or "").strip()
+        if req_base_url:
+            active_base_url = normalize_base_url(req_base_url, is_liquid=is_d1 or ("liquid.ai" in req_base_url))
+        elif self.base_url:
+            active_base_url = normalize_base_url(self.base_url, is_liquid=is_d1 or ("liquid.ai" in self.base_url))
+        elif is_d1 or (active_key and not any(active_key.startswith(p) for p in ["vck_", "vcl_", "vercel_"]) and not TYPESAFE_API_KEY and LIQUID_API_KEY):
+            active_base_url = LIQUID_BASE_URL
+        elif active_key and any(active_key.startswith(p) for p in ["vck_", "vcl_", "vercel_"]):
+            active_base_url = "https://ai-gateway.vercel.sh/typesafe"
+        else:
+            active_base_url = TYPESAFE_BASE_URL
 
         if self.mock or not active_key:
-            return await self._mock_decide(craving, state, effective_pool, persist_server)
+            return await self._mock_decide(craving, state, effective_pool, persist_server, model=active_model)
 
         return await self._jev_decide(
             craving=craving,
@@ -141,7 +172,8 @@ class DecisionEngine:
             effective_pool=effective_pool,
             api_key=active_key,
             base_url=active_base_url,
-            persist_server=persist_server
+            persist_server=persist_server,
+            model=active_model
         )
 
     async def _jev_decide(
@@ -151,11 +183,14 @@ class DecisionEngine:
         effective_pool: List[str],
         api_key: str,
         base_url: Optional[str] = None,
-        persist_server: bool = True
+        persist_server: bool = True,
+        model: Optional[str] = None
     ) -> DecisionResponse:
+        active_model = model or self.model or JEV_MODEL
         client = AsyncTypeSafeClient(
             api_key=api_key,
-            base_url=base_url or None
+            base_url=base_url or None,
+            timeout=60.0
         )
 
         questions = {
@@ -174,12 +209,12 @@ class DecisionEngine:
         try:
             response = await client.system_one(
                 state=state,
-                model=self.model,
+                model=active_model,
                 questions=questions
             )
         except Exception as e:
-            print(f"[JEV API WARNING] Jev API call failed ({type(e).__name__}: {e}). Falling back to simulation mode.")
-            return await self._mock_decide(craving, state, effective_pool, persist_server)
+            print(f"[{active_model.upper()} API WARNING] Model API call failed ({type(e).__name__}: {e}). Falling back to simulation mode.")
+            return await self._mock_decide(craving, state, effective_pool, persist_server, model=active_model)
 
         achievable_ans = response.answers.get("is_achievable")
         indifferent_ans = response.answers.get("is_indifferent")
@@ -203,7 +238,8 @@ class DecisionEngine:
             is_indifferent=is_indifferent,
             confidence=confidence,
             probabilities=probabilities,
-            persist_server=persist_server
+            persist_server=persist_server,
+            model=active_model
         )
 
     def _route_verdict(
@@ -214,7 +250,8 @@ class DecisionEngine:
         is_indifferent: float,
         confidence: float,
         probabilities: Dict[str, float],
-        persist_server: bool = True
+        persist_server: bool = True,
+        model: Optional[str] = None
     ) -> DecisionResponse:
         # Gate 1: Check achievability (Impasse)
         if is_achievable < 0.20:
@@ -227,7 +264,8 @@ class DecisionEngine:
                 confidence=confidence,
                 is_achievable=is_achievable,
                 is_indifferent=is_indifferent,
-                auto_logged=False
+                auto_logged=False,
+                model=model
             )
 
         # Gate 2: Check indifference (Apathy -> Blind Box)
@@ -241,7 +279,8 @@ class DecisionEngine:
                 confidence=confidence,
                 is_achievable=is_achievable,
                 is_indifferent=is_indifferent,
-                auto_logged=False
+                auto_logged=False,
+                model=model
             )
 
         # Gate 3: Sort by probability
@@ -269,7 +308,8 @@ class DecisionEngine:
                 is_indifferent=is_indifferent,
                 auto_logged=True,
                 history_entry_id=entry.id,
-                history_entry=entry
+                history_entry=entry,
+                model=model
             )
 
         # Decision rule 2: Dilemma Duel (Tied top contenders)
@@ -293,7 +333,8 @@ class DecisionEngine:
                 is_indifferent=is_indifferent,
                 auto_logged=True,
                 history_entry_id=entry.id,
-                history_entry=entry
+                history_entry=entry,
+                model=model
             )
 
         # Decision rule 3: Soft Pick (Moderate preference)
@@ -310,7 +351,8 @@ class DecisionEngine:
             is_indifferent=is_indifferent,
             auto_logged=True,
             history_entry_id=entry.id,
-            history_entry=entry
+            history_entry=entry,
+            model=model
         )
 
     async def _mock_decide(
@@ -318,7 +360,8 @@ class DecisionEngine:
         craving: str,
         state: str,
         effective_pool: List[str],
-        persist_server: bool = True
+        persist_server: bool = True,
+        model: Optional[str] = None
     ) -> DecisionResponse:
         """
         Deterministic mock engine for offline testing and verification.
@@ -331,7 +374,8 @@ class DecisionEngine:
                 is_achievable=0.05,
                 is_indifferent=0.10,
                 confidence=0.10,
-                probabilities={c: 1.0 / len(effective_pool) for c in effective_pool}
+                probabilities={c: 1.0 / len(effective_pool) for c in effective_pool},
+                model=model
             )
 
         # 2. Indifference test
@@ -342,23 +386,28 @@ class DecisionEngine:
                 is_achievable=0.95,
                 is_indifferent=0.92,
                 confidence=0.10,
-                probabilities={c: 1.0 / len(effective_pool) for c in effective_pool}
+                probabilities={c: 1.0 / len(effective_pool) for c in effective_pool},
+                model=model
             )
 
-        # 3. Specific craving match
+        # 3. Dynamic semantic and character overlap matching (works on any custom candidates)
         scores = {}
         for c in effective_pool:
             score = 0.05
-            if ("面" in craving or "热汤" in craving) and ("面" in c or "烫" in c):
+            # Character overlap
+            overlap = sum(1 for char in c if char in craving)
+            if overlap > 0:
+                score += overlap * 0.25
+
+            # Semantic cuisine associations
+            if any(w in craving for w in ["面", "粉", "汤", "热", "暖", "喝", "碳水"]) and any(w in c for w in ["面", "粉", "汤", "烫", "拉面", "米线"]):
                 score += 0.40
-            if ("快餐" in craving or "汉堡" in craving or "炸鸡" in craving) and ("麦当劳" in c):
-                score += 0.60
-            if ("米饭" in craving or "饱腹" in craving) and ("饭" in c or "黄焖鸡" in c):
+            if any(w in craving for w in ["肉", "快餐", "汉堡", "炸鸡", "烤", "硬菜", "饱", "饭", "犒劳", "重口"]) and any(w in c for w in ["肉", "汉堡", "鸡", "牛", "饭", "排", "烧", "麦当劳"]):
                 score += 0.45
-            if ("清淡" in craving or "减脂" in craving) and ("沙拉" in c or "关东煮" in c):
-                score += 0.50
-            if ("纠结" in craving or "对决" in craving) and ("麻辣烫" in c or "重庆小面" in c):
-                score = 0.35
+            if any(w in craving for w in ["清淡", "减脂", "低卡", "不油", "轻食", "素", "消化"]) and any(w in c for w in ["沙拉", "素", "煮", "粥", "蔬", "轻食", "关东煮"]):
+                score += 0.45
+            if any(w in craving for w in ["辣", "川", "湘", "过瘾", "纠结", "对决"]) and any(w in c for w in ["辣", "烫", "川", "湘", "小面", "火锅"]):
+                score += 0.40
             scores[c] = score
 
         # Normalize
@@ -376,5 +425,6 @@ class DecisionEngine:
             is_indifferent=0.05,
             confidence=confidence,
             probabilities=probabilities,
-            persist_server=persist_server
+            persist_server=persist_server,
+            model=model
         )

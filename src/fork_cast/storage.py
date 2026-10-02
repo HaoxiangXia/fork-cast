@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import List, Optional
-from fork_cast.config import CANDIDATES_FILE, HISTORY_FILE, HISTORY_WINDOW_HOURS
+from fork_cast.config import CANDIDATES_FILE, HISTORY_FILE, HISTORY_WINDOW_HOURS, CANDIDATE_POOL_CAP
 from fork_cast.models import HistoryEntry
 
 
@@ -49,6 +49,8 @@ class CandidateStorage:
         if not clean:
             raise ValueError("Candidate name cannot be empty")
         candidates = self.load_candidates()
+        if len(candidates) >= CANDIDATE_POOL_CAP:
+            raise ValueError(f"Candidate pool reached cap of {CANDIDATE_POOL_CAP}")
         if clean in candidates:
             raise ValueError(f"Candidate '{clean}' already exists")
         candidates.append(clean)
