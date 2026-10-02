@@ -1,8 +1,8 @@
 {
   "brand": {
-    "name": "吃了吗",
+    "name": "吃什么",
     "subtitle": "解决每日人生难题：今天吃什么？",
-    "footer": "吃了吗 · 随性就餐决策"
+    "footer": "吃什么 · 随性就餐决策 · SYSTEM 1 MODEL"
   },
   "nav": {
     "blind_box": "盲盒",
@@ -10,28 +10,32 @@
   },
   "input": {
     "label": "诉求投币口",
-    "placeholder": "“今天好累不想动脑子，想吃点热腾腾的碳水炸弹治愈一下...”",
+    "placeholder": "“胃口平淡想喝碗清汤”、“刚健身完需要高蛋白低脂”、“下雨天想吃点重口味辣的”...",
     "quick_label": "灵感垫片:",
     "quick_tags": [
       { "label": "热汤碳水", "text": "今天好累，想吃热汤碳水炸弹" },
       { "label": "清淡易消化", "text": "胃有点不适，吃点清淡好消化的，拒绝油炸和辣" },
-      { "label": "随便都行", "text": "随便来个，吃啥都行无所谓" }
+      { "label": "随便都行", "text": "随便来个，吃啥都行无所谓" },
+      { "label": "来顿好的犒劳", "text": "辛苦了来顿好的硬菜犒劳自己，预算充足有肉就行" }
     ],
     "slap_button": "拍 板 决 策",
-    "slap_loading": "正在调动 JEV 裁决...",
+    "slap_loading_jev": "正在调动 JEV 裁决...",
+    "slap_loading_d1": "正在调动 D1 裁决...",
     "dispenser_slot": "▼ 出票导槽 ▼",
     "exclusion_prefix": "临时排除:"
   },
   "ticket": {
-    "header_brand": "吃了吗 · 专属餐券",
+    "header_brand": "吃什么 · 专属餐券",
     "stamps": {
       "decisive": "拍板落定",
       "soft": "倾向建议",
       "impasse": "神仙难救",
-      "indifference": "盲盒邀约"
+      "indifference": "盲盒邀约",
+      "duel": "势均力敌"
     },
     "labels": {
-      "confidence": "JEV 校准置信度",
+      "confidence_jev": "JEV 校准置信度",
+      "confidence_d1": "D1 校准置信度",
       "distribution": "候选分布:",
       "alternatives_prefix": "备选:"
     },
@@ -39,40 +43,70 @@
       "eat": "去吃！",
       "revoke": "撤销并排除",
       "refocus": "重新整理需求",
-      "draw_blind_box": "直接抽个盲盒"
+      "draw_blind_box": "直接抽个盲盒",
+      "accept_duel": "接受对决，去吃！",
+      "view_duel": "查看对决轮盘"
     }
   },
   "engine_messages": {
-    "impasse": "你的要求神仙也做不到，自相矛盾了，先喝杯热水冷静一下吧。",
-    "indifference": "检测到你今天完全不挑、毫无偏好，建议直接使用「开盲盒」功能碰碰运气！",
+    "impasse": "你的要求神仙也做不到，现实中无此类菜品，先喝杯温水重新整理思路吧。",
+    "indifference": "检测到你今天毫无特定偏好，建议启动均等分布盲盒摇号！",
     "decisive": "不用纠结了，今天就是【{primary}】！",
-    "duel": "势均力敌！在【{contenders}】中决出胜者：【{winner}】！",
+    "duel": "双雄难分伯仲，终局落定【{winner}】！天意单次裁决，拒绝反复掷骰，去吃吧！",
     "soft": "为你推荐【{primary}】，如果今天不顺路也可以选【{alternative}】。",
     "lone": "候选池中仅剩唯一选择，不用纠结了，今天就是【{lone}】！",
     "empty": "没有可用的候选就餐选项（所有候选均已被排除或候选池为空）。"
   },
   "modals": {
+    "welcome": {
+      "title": "欢迎使用 · 吃什么",
+      "subtitle": "零标签随性决策",
+      "desc": "基于 System 1 概率决策模型，直接输入大白话快速拍板吃什么。",
+      "points": {
+        "quota_title": "每天 10 次公共免费算力",
+        "quota_desc": "系统默认提供每日 10 次免费决策额度（北京时间每日零点自动刷新）。",
+        "byok_title": "支持自备个人 Key（无限制）",
+        "byok_desc": "可在设置中填入你的 TypeSafe 或 Liquid API Key，直连私有算力，无限制极速调用。",
+        "pool_title": "个性化常吃候选池",
+        "pool_desc": "在设置中增删你平时常吃的菜品或店名，模型会自动常识推导，越用越顺手。"
+      },
+      "btn_dismiss": "知道了，开始拍板",
+      "btn_settings": "先配置常吃清单与 Key"
+    },
+    "settings": {
+      "title": "个人设置与菜单",
+      "group_credentials": "决策内核与算力凭据",
+      "group_credentials_desc": "支持 Jev 与 D1 决策模型。系统默认提供每日 10 次公共免费算力；填入个人 Key 无限制极速调用。",
+      "group_history_window": "防腻回溯窗口",
+      "group_history_window_desc": "此时间段内吃过的菜品会被自动降权防腻，避免连续几天重复吃同一样。",
+      "group_pool": "个人候选池 (常吃清单)",
+      "group_history": "本机就餐历史",
+      "btn_save": "完成并就绪"
+    },
     "pool": {
       "title": "个人候选池 (常吃清单)",
-      "desc": "维护平时常吃常买的菜品清单。Jev 大模型常识会自动解析属性，无需给菜品打标签。",
+      "desc": "维护平时常吃常买的菜品清单。Jev / D1 大模型常识会自动解析属性，无需给菜品打标签。",
       "placeholder": "新增菜品 / 餐馆名",
-      "btn_add": "添加"
+      "btn_add": "添加",
+      "btn_reset": "恢复默认 8 款推荐菜单"
     },
     "blind_box": {
-      "title": "盲盒抽选",
-      "drum_text": "随机",
-      "drum_done": "完成",
-      "settle_badge": "天意已决，绝不反悔",
-      "tag": "免记入历史 · 随时重抽",
-      "btn_roll": "摇一个",
-      "btn_close": "收起"
+      "title": "LUCKY DRAW · 盲盒神签",
+      "tag": "不计入历史",
+      "desc": "从当前有效常吃候选池中均等随机摇号，彻底打消选择疲劳。",
+      "drum_idle": "点击摇号",
+      "settle_badge": "天 意 已 决 · 绝 不 反 悔",
+      "hint": "随性之选 · 随时可重新抽签",
+      "btn_roll": "抽取盲盒",
+      "btn_accept": "去吃这道菜！",
+      "btn_close": "收起关闭"
     },
     "duel": {
-      "title": "DILEMMA DUEL · 终局对决",
-      "desc": "势均力敌！轮盘一转定乾坤，单次终态绝不复摇。",
-      "winner_label": "对决胜出：",
-      "btn_spin": "启动对决轮盘",
-      "btn_accept": "接受对决，去吃！"
+      "title": "DILEMMA DUEL · 双雄终局对决",
+      "tagline": "势均力敌 · 毫厘决胜 · 单次终局绝不复掷",
+      "winner_stamp": "终 局 胜 出",
+      "btn_spin": "启动双雄决战轮盘",
+      "btn_accept": "遵从决斗结果，去吃！"
     }
   },
   "toasts": {
@@ -84,6 +118,9 @@
     "input_empty": "请先输入几句就餐想法",
     "network_error": "网络错误，请检查服务",
     "blind_box_failed": "盲盒抽取失败",
-    "revoke_failed": "撤销失败"
+    "revoke_failed": "撤销失败",
+    "quota_exhausted": "今日 10 次免费额度已用尽（北京时间次日重置）。请在设置中配置个人 API Key 继续使用！",
+    "history_hours_set": "已将防腻回溯窗口设为 {hours} 小时",
+    "model_switched": "已切换至 {model} 决策内核"
   }
 }

@@ -19,12 +19,12 @@ def test_api_full_flow(tmp_path):
     # 1.1 Frontend HTML served
     r_html = client.get("/")
     assert r_html.status_code == 200
-    assert "吃了吗" in r_html.text
+    assert "吃什么" in r_html.text
 
     # 1.2 Copy API served
     r_copy = client.get("/api/copy")
     assert r_copy.status_code == 200
-    assert r_copy.json()["brand"]["name"] == "吃了吗"
+    assert r_copy.json()["brand"]["name"] == "吃什么"
 
     # 1.3 Stateless BYOK decision with client candidates and key
     r_stateless = client.post("/api/decide", json={
@@ -37,6 +37,18 @@ def test_api_full_flow(tmp_path):
     assert res_stateless["primary"] in ["生煎包", "瓦罐汤"]
     assert res_stateless["history_entry"] is not None
     assert res_stateless["history_entry"]["candidate"] in ["生煎包", "瓦罐汤"]
+
+    # 1.4 D1 model BYOK decision
+    r_d1 = client.post("/api/decide", json={
+        "craving": "想喝点热汤",
+        "candidates": ["生煎包", "瓦罐汤"],
+        "api_key": "liquid_byok_key",
+        "model": "d1:free"
+    })
+    assert r_d1.status_code == 200
+    res_d1 = r_d1.json()
+    assert res_d1["model"] == "d1:free"
+    assert res_d1["primary"] in ["生煎包", "瓦罐汤"]
 
     # 2. Candidate management
     # List
