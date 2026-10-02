@@ -27,9 +27,9 @@ def build_state_context(
             f"{h.candidate} (于 {h.timestamp[:16].replace('T', ' ')})"
             for h in recent_history[-5:]
         ])
-        parts.append(f"【最近就餐记录】：{recent_desc}。请适度避开近期频繁重复的品类。")
+        parts.append(f"【防腻降权窗口记录】：{recent_desc}。特别约束：在防腻窗口内出现频次越高的品类，必须施加越严格的累加衰减降权；单次出现的品类施加常规避让，优先推荐窗口内未曾食用的品类。")
     else:
-        parts.append("【最近就餐记录】：近期暂无就餐记录。")
+        parts.append("【防腻降权窗口记录】：防腻窗口内暂无就餐记录。")
 
     if exclusions:
         excl_str = "、".join(exclusions)

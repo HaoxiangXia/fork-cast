@@ -1,7 +1,7 @@
 import random
 from pathlib import Path
 from typing import List, Optional
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fork_cast.models import (
@@ -12,17 +12,21 @@ from fork_cast.models import (
     CandidateListResponse,
     CandidateAddRequest,
     HistoryEntry,
+    QuotaStatusResponse,
 )
+from fork_cast.quota import quota_manager, get_beijing_today, QuotaManager
 from fork_cast.storage import CandidateStorage, HistoryStorage
 from fork_cast.engine import DecisionEngine
 from fork_cast.copy_manager import copy_manager
 
 STATIC_INDEX = Path(__file__).resolve().parent / "static" / "index.html"
+DEMO_FLAT_HTML = Path(__file__).resolve().parent.parent.parent / "docs" / "demo-flat.html"
 
 
 def create_app(
     candidate_storage: Optional[CandidateStorage] = None,
     history_storage: Optional[HistoryStorage] = None,
+    quota_manager_instance: Optional[QuotaManager] = None,
     mock: bool = False
 ) -> FastAPI:
     app = FastAPI(
@@ -42,6 +46,7 @@ def create_app(
 
     cs = candidate_storage or CandidateStorage()
     hs = history_storage or HistoryStorage()
+    qm = quota_manager_instance or quota_manager
     engine = DecisionEngine(
         candidate_storage=cs,
         history_storage=hs,
@@ -53,6 +58,12 @@ def create_app(
         if STATIC_INDEX.exists():
             return FileResponse(STATIC_INDEX)
         return {"message": "Frontend static file not found"}
+
+    @app.get("/demo", include_in_schema=False)
+    def serve_flat_demo():
+        if DEMO_FLAT_HTML.exists():
+            return FileResponse(DEMO_FLAT_HTML)
+        return {"message": "Flat demo static file not found"}
 
     @app.get("/api/health")
     def health_check():
@@ -67,18 +78,75 @@ def create_app(
     def get_copy_config():
         return copy_manager.load_copy()
 
+    @app.get("/api/quota", response_model=QuotaStatusResponse)
+    def get_quota_status(request: Request, device_id: Optional[str] = Query(default=None)):
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            client_ip = forwarded.split(",")[0].strip()
+        elif request.client:
+            client_ip = request.client.host
+        else:
+            client_ip = "127.0.0.1"
+        dev_id = request.headers.get("X-Device-Id") or device_id or "unknown_dev"
+        limit, used, remaining = qm.get_status(client_ip, dev_id)
+        return QuotaStatusResponse(
+            limit=limit,
+            used=used,
+            remaining=remaining,
+            date=get_beijing_today(),
+            byok_active=False
+        )
+
     @app.post("/api/decide", response_model=DecisionResponse)
-    async def decide_food(req: DecisionRequest):
+    async def decide_food(req: DecisionRequest, request: Request):
         if not req.craving.strip():
             raise HTTPException(status_code=400, detail="Craving text cannot be empty")
-        return await engine.decide(
+
+        # Extract client IP (X-Forwarded-For or client.host)
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            client_ip = forwarded.split(",")[0].strip()
+        elif request.client:
+            client_ip = request.client.host
+        else:
+            client_ip = "127.0.0.1"
+
+        # Extract device ID from header or body
+        dev_id = request.headers.get("X-Device-Id") or req.device_id or "unknown_dev"
+
+        # Check if client provided a personal BYOK key
+        has_byok = bool(req.api_key and req.api_key.strip())
+
+        quota_rem = None
+        quota_lim = qm.limit
+
+        # Enforce quota only when using shared server key (non-BYOK and non-mock)
+        if not has_byok and not engine.mock:
+            allowed, used, remaining = qm.check_and_consume(client_ip, dev_id)
+            if not allowed:
+                raise HTTPException(
+                    status_code=429,
+                    detail=f"今日 {qm.limit} 次免费额度已用尽（北京时间次日重置）。请在设置中配置个人 API Key 继续使用！"
+                )
+            quota_rem = remaining
+        else:
+            # For BYOK or Mock, query status without consuming
+            _, _, quota_rem = qm.get_status(client_ip, dev_id)
+
+        decision = await engine.decide(
             craving=req.craving,
             exclusions=req.exclusions,
             candidates=req.candidates,
             recent_history=req.recent_history,
             api_key=req.api_key,
-            base_url=req.base_url
+            base_url=req.base_url,
+            model=req.model,
+            history_window_hours=req.history_window_hours
         )
+
+        decision.quota_remaining = quota_rem
+        decision.quota_limit = quota_lim
+        return decision
     @app.post("/api/blind-box", response_model=BlindBoxResponse)
     def draw_blind_box(
         exclusions: Optional[List[str]] = Query(default=None),

@@ -36,11 +36,23 @@ class DecisionRequest(BaseModel):
     )
     api_key: Optional[str] = Field(
         default=None,
-        description="Client-provided TypeSafe API Key (BYOK)"
+        description="Client-provided TypeSafe / Liquid API Key (BYOK)"
     )
     base_url: Optional[str] = Field(
         default=None,
-        description="Client-provided custom Base URL for Jev"
+        description="Client-provided custom Base URL for Jev / D1"
+    )
+    model: Optional[str] = Field(
+        default=None,
+        description="Client-provided decision model (e.g. jev-latest, d1:free)"
+    )
+    device_id: Optional[str] = Field(
+        default=None,
+        description="Client device UUID for Option C daily quota enforcement"
+    )
+    history_window_hours: Optional[int] = Field(
+        default=None,
+        description="Client-configured history lookback window in hours"
     )
 
 
@@ -56,6 +68,18 @@ class DecisionResponse(BaseModel):
     auto_logged: bool = False
     history_entry_id: Optional[str] = None
     history_entry: Optional["HistoryEntry"] = None
+    model: Optional[str] = Field(
+        default=None,
+        description="Decision model used for this evaluation (e.g. jev-latest, d1:free, mock)"
+    )
+    quota_remaining: Optional[int] = Field(
+        default=None,
+        description="Remaining free quota for today (Beijing time)"
+    )
+    quota_limit: Optional[int] = Field(
+        default=None,
+        description="Daily free quota limit"
+    )
 
 
 
@@ -78,3 +102,11 @@ class CandidateListResponse(BaseModel):
 
 class CandidateAddRequest(BaseModel):
     name: str
+
+
+class QuotaStatusResponse(BaseModel):
+    limit: int
+    used: int
+    remaining: int
+    date: str
+    byok_active: bool
