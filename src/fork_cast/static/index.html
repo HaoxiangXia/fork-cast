@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title id="doc-title">吃了吗</title>
+  <title id="doc-title">吃什么</title>
   <style>
     /* CSS Reset & Design Tokens */
     *, *::before, *::after {
@@ -36,36 +36,50 @@
       color: var(--ink-carbon);
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
       min-height: 100vh;
+      width: 100%;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: stretch;
       justify-content: flex-start;
-      padding: 12px 10px 24px;
       user-select: none;
     }
 
-    /* Mobile Container */
+    /* Canvas Full Layout - 铺满画布无外层大卡片 */
     .app-container {
       width: 100%;
-      max-width: 440px;
-      margin: 0 auto;
+      max-width: 100%;
+      min-height: 100vh;
+      margin: 0;
       display: flex;
       flex-direction: column;
       gap: 0;
+      flex: 1;
+      background-color: var(--bg-tile);
     }
 
-    /* Machine Header Bar */
+    /* Machine Header Bar - 顶栏全宽平铺 */
     .machine-header {
       background: var(--steel-header);
       color: #FFFFFF;
-      padding: 12px 16px;
-      border-radius: 10px 10px 0 0;
-      border: 2.5px solid var(--machine-border);
-      border-bottom: none;
+      padding: 14px 20px;
+      border-radius: 0;
+      border: none;
+      border-bottom: 2px solid var(--machine-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .machine-header-inner {
+      width: 100%;
+      max-width: 580px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 13px;
     }
 
     .brand-title {
@@ -122,16 +136,20 @@
       border-color: rgba(253, 224, 71, 0.5);
     }
 
-    /* Machine Body */
+    /* Machine Body - 无外层笨重卡片框/阴影，居中内容区保留内部卡片 */
     .machine-body {
-      background: var(--machine-shell);
-      border: 2.5px solid var(--machine-border);
-      border-radius: 0 0 14px 14px;
-      padding: 16px 14px 20px;
-      box-shadow: 0 12px 28px rgba(18, 30, 23, 0.16);
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 20px 16px 40px;
+      box-shadow: none;
       display: flex;
       flex-direction: column;
       gap: 16px;
+      width: 100%;
+      max-width: 580px;
+      margin: 0 auto;
+      flex: 1;
     }
 
     /* Metadata Ribbon */
@@ -267,6 +285,12 @@
     .quick-tag:active {
       background: #E5E7EB;
     }
+    .model-tab-active {
+      background: #FEF3C7 !important;
+      border-color: var(--broth-gold) !important;
+      color: var(--broth-gold) !important;
+      font-weight: 800 !important;
+    }
 
     /* Slap Button */
     .btn-slap {
@@ -315,7 +339,7 @@
 
     .slot-label {
       display: inline-block;
-      background: var(--machine-shell);
+      background: var(--bg-tile);
       padding: 0 10px;
       font-size: 9px;
       font-weight: 700;
@@ -378,6 +402,48 @@
       color: var(--broth-gold);
     }
 
+    .stamp-seal.duel {
+      border: 2.5px solid #D97706;
+      color: #B45309;
+      background: #FFFBEB;
+    }
+
+    .demo-switch-bar {
+      background: #18221B;
+      border-bottom: 1.5px solid rgba(255,255,255,0.12);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 100%;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .demo-switch-tab {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      color: #D1D5DB;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .demo-switch-tab:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
+    }
+    .demo-switch-tab.active {
+      background: var(--stamp-red);
+      border-color: var(--stamp-red);
+      color: #FFFFFF;
+      font-weight: 800;
+    }
     @keyframes stampSlam {
       0% { opacity: 0; transform: scale(2) rotate(-16deg); }
       70% { opacity: 1; transform: scale(0.95) rotate(-5deg); }
@@ -566,16 +632,47 @@
       gap: 14px;
     }
 
-    .settings-section {
-      background: #F9FAFB;
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 12px;
+    .settings-group {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
-
+    .settings-group:last-of-type {
+      border-bottom: none;
+    }
+    .settings-group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .settings-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--steel-dark);
+      letter-spacing: 0.3px;
+    }
+    .history-chip {
+      background: #FFFFFF;
+      border: 1px solid var(--border-grout);
+      border-radius: 4px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--steel-dark);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .history-chip:hover {
+      border-color: var(--steel-dark);
+    }
+    .history-chip.active {
+      background: #FEF3C7 !important;
+      border-color: var(--broth-gold) !important;
+      color: var(--broth-gold) !important;
+      font-weight: 800 !important;
+    }
     .chip-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -639,49 +736,127 @@
       cursor: pointer;
     }
 
-    /* Blind Box Modal Specifics */
-    .blindbox-drum {
-      width: 100px;
-      height: 100px;
-      margin: 8px auto;
-      background: #FFFBEB;
-      border: 2.5px dashed var(--broth-gold);
-      border-radius: 12px;
+    /* Blind Box Slot Reel Specifics */
+    .lottery-window {
+      background: #151D18;
+      border: 2px solid var(--machine-border);
+      border-radius: 6px;
+      padding: 16px 12px;
+      position: relative;
+    }
+    .lottery-reel-text {
+      font-size: 24px;
+      font-weight: 900;
+      color: #FDE047;
+      letter-spacing: 1px;
+      min-height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-family: inherit;
+    }
+    .fortune-tag {
+      font-size: 11px;
       font-weight: 800;
       color: var(--broth-gold);
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+    .fortune-dish {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--ink-carbon);
+      letter-spacing: -0.5px;
+      margin: 4px 0 6px;
     }
 
-    .spinning {
-      animation: drumSpin 0.35s linear infinite;
+    /* Duel Face-off Arena Specifics */
+    .vs-arena {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 2px;
     }
-
-    @keyframes drumSpin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .contender-card {
+      flex: 1;
+      background: #FFFFFF;
+      border: 2px solid var(--machine-border);
+      border-radius: 6px;
+      padding: 10px 8px;
+      transition: border-color 0.12s ease, background-color 0.12s ease, opacity 0.12s ease;
     }
-
-    /* Duel Wheel Canvas */
-    .wheel-wrapper {
+    .contender-card.active-contender {
+      border-color: var(--stamp-red);
+      background: #FEF2F2;
+    }
+    .contender-card.winner {
+      border-color: #16A34A;
+      background: #F0FDF4;
+    }
+    .contender-card.dimmed {
+      opacity: 0.35;
+    }
+    .contender-role {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--ink-muted);
+      margin-bottom: 4px;
+    }
+    .contender-name {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--steel-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vs-badge {
+      font-size: 13px;
+      font-weight: 900;
+      color: #DC2626;
+      background: #FEE2E2;
+      border: 1.5px solid #DC2626;
+      border-radius: 4px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .duel-dial-stage {
       position: relative;
       width: 220px;
       height: 220px;
-      margin: 8px auto;
+      margin: 8px auto 4px;
     }
-
-    .wheel-pointer {
+    .duel-pointer {
       position: absolute;
       top: -12px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 20px;
+      font-size: 18px;
       color: var(--stamp-red);
       z-index: 20;
     }
-
+    .duel-canvas {
+      /* deslop-ignore-next-line 19 */
+      border-radius: 50%;
+      border: 2.5px solid var(--machine-border);
+    }
+    .winner-stamp {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: var(--stamp-red);
+    }
+    .winner-dish-title {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--ink-carbon);
+      margin: 4px 0;
+    }
     /* Toast */
     .toast-box {
       position: fixed;
@@ -709,11 +884,16 @@
 
     /* Footer */
     .page-footer {
-      margin-top: 16px;
-      font-size: 10px;
+      margin-top: 24px;
+      font-size: 11px;
       color: var(--ink-muted);
       letter-spacing: 0.5px;
       text-align: center;
+      padding-bottom: 36px;
+      width: 100%;
+      max-width: 580px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .hidden {
@@ -724,17 +904,18 @@
 <body>
 
   <div class="app-container">
-
-    <!-- TOP HEADER -->
+        <!-- TOP HEADER (全宽顶栏，居中对齐) -->
     <header class="machine-header">
-      <div class="brand-title">
-        <span class="status-dot"></span>
-        <span id="brand-title">吃了吗</span>
-        <span id="brand-subtitle" class="brand-subtitle"></span>
-      </div>
-      <div class="header-actions">
-        <button id="btn-open-blindbox" class="nav-btn gold"><span id="blindbox-nav-label">盲盒</span>(<span id="status-candidate-count">0</span>)</button>
-        <button id="btn-open-settings" class="nav-btn"><span id="settings-nav-label">设置</span></button>
+      <div class="machine-header-inner">
+        <div class="brand-title">
+          <span class="status-dot"></span>
+          <span id="brand-title">吃什么</span>
+          <span id="brand-subtitle" class="brand-subtitle"></span>
+        </div>
+        <div class="header-actions">
+          <button id="btn-open-blindbox" class="nav-btn gold"><span id="blindbox-nav-label">盲盒</span>(<span id="status-candidate-count">0</span>)</button>
+          <button id="btn-open-settings" class="nav-btn"><span id="settings-nav-label">设置</span></button>
+        </div>
       </div>
     </header>
 
@@ -744,7 +925,10 @@
       <!-- SUB-STATUS & RECENT MEAL RIBBON -->
       <div class="meta-ribbon">
         <div id="live-clock" class="clock-display">周一 12:00</div>
-        <div id="recent-meal-tag" class="history-crumb">48H历史：暂无记录</div>
+        <div style="display: flex; gap: 8px; align-items: center; overflow: hidden;">
+          <div id="quota-tag" class="history-crumb" style="font-weight: 700; color: var(--steel-dark);">今日免费: 10/10</div>
+          <div id="recent-meal-tag" class="history-crumb">48H历史：暂无记录</div>
+        </div>
       </div>
 
       <!-- CRAVING INPUT ZONE -->
@@ -792,54 +976,133 @@
 
     <!-- FOOTER -->
     <footer id="footer-text" class="page-footer">
-      吃了吗 · 随性就餐决策 · TYPESAFE JEV
+      <span>吃什么 · 随性就餐决策 · SYSTEM 1 MODEL</span>
+      <span style="margin: 0 4px;">·</span>
+      <a href="https://github.com/HaoxiangXia/fork-cast" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; border-bottom: 1.5px solid currentColor; font-weight: 700;">GitHub</a>
     </footer>
 
   </div>
 
+  <!-- FIRST-TIME WELCOME & ONBOARDING MODAL -->
+  <div id="welcome-modal" class="modal-backdrop hidden">
+    <div class="modal-box" style="max-width: 420px;">
+      <div class="modal-head" style="background: var(--steel-header);">
+        <div style="display: flex; align-items: baseline; gap: 6px;">
+          <span>欢迎使用 · 吃什么</span>
+          <span style="font-size: 11px; font-weight: normal; color: #D1D5DB;">零标签随性决策</span>
+        </div>
+        <button id="btn-close-welcome" class="modal-close" onclick="closeWelcomeModal()">✕</button>
+      </div>
+      <div class="modal-content" style="padding: 18px 18px 22px; gap: 14px;">
+        <p style="font-size: 13px; color: var(--ink-secondary); line-height: 1.5;">
+          基于 <strong>System 1 概率决策模型</strong>，无需为菜品打标签或维护复杂属性，直接输入大白话快速拍板。
+        </p>
+
+        <!-- 3 Feature Points -->
+        <div style="display: flex; flex-direction: column; gap: 10px; margin: 4px 0;">
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <span style="font-size: 12px; color: var(--steel-dark); padding-top: 1px;">❖</span>
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">每天 10 次公共免费算力</div>
+              <div style="font-size: 11px; color: var(--ink-muted); line-height: 1.4;">系统默认提供每日 10 次免费决策额度（北京时间每日零点自动刷新）。</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <span style="font-size: 12px; color: var(--steel-dark); padding-top: 1px;">❖</span>
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">支持自备个人 Key（无限制）</div>
+              <div style="font-size: 11px; color: var(--ink-muted); line-height: 1.4;">可在设置中填入你的 TypeSafe 或 Liquid API Key，直连私有算力，无限制极速调用。</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: flex-start;">
+            <span style="font-size: 12px; color: var(--steel-dark); padding-top: 1px;">❖</span>
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">个性化常吃候选池</div>
+              <div style="font-size: 11px; color: var(--ink-muted); line-height: 1.4;">在设置中增删你平时常吃的菜品或店名，模型会自动常识推导，越用越顺手。</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+          <button type="button" class="btn-eat" style="width: 100%; min-height: 48px; height: 48px; font-size: 14px; font-weight: 800;" onclick="dismissWelcomeModal(false)">
+            我知道了，开始使用
+          </button>
+          <button type="button" class="btn-revoke" style="width: 100%; min-height: 40px; height: 40px; font-size: 12px; font-weight: 600;" onclick="dismissWelcomeModal(true)">
+            前往设置候选池与 Key
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- REDESIGNED SETTINGS & ROTATION WORKSHOP MODAL -->
   <div id="settings-modal" class="modal-backdrop hidden">
     <div class="modal-box">
       <div class="modal-head">
-        <span>机箱侧板 · 个人设置与菜单</span>
+        <span id="settings-modal-title">个人设置与菜单</span>
         <button id="btn-close-settings" class="modal-close">✕</button>
       </div>
       <div class="modal-content">
 
-        <!-- SECTION 1: API KEY & GATEWAY (BYOK) -->
-        <div class="settings-section">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">❖ 算力凭据 (Jev API 密钥)</span>
+        <!-- GROUP 1: MODEL & API KEY -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <span class="settings-title">决策内核与算力凭据</span>
             <span id="key-status-indicator" style="font-size: 11px; font-weight: 700; color: #DC2626;">○ 待填入 Key</span>
           </div>
-          <p style="font-size: 11px; color: var(--ink-muted); line-height: 1.4;">
-            密钥与就餐数据完全保存在你当前手机本地，不走服务器存储，自备自用。
+          <p id="quota-settings-desc" style="font-size: 11px; color: var(--ink-muted); line-height: 1.4;">
+            支持 Jev 与 D1 决策模型。系统默认提供每日 10 次公共免费算力；填入个人 Key 无限制极速调用。
           </p>
+
+          <!-- Model Selector -->
+          <div style="display: flex; gap: 6px;">
+            <button type="button" id="btn-model-jev" class="quick-tag" onclick="switchModel('jev-latest')" style="flex: 1; text-align: center;">Jev (TypeSafe)</button>
+            <button type="button" id="btn-model-d1" class="quick-tag" onclick="switchModel('d1:free')" style="flex: 1; text-align: center;">D1 (Liquid AI)</button>
+          </div>
+
           <div style="display: flex; gap: 6px; align-items: center;">
-            <input id="cfg-api-key" type="password" class="input-clean" placeholder="输入 Jev API Key (apikey_... 或 vck_...)" style="font-size: 12px;" />
+            <input id="cfg-api-key" type="password" class="input-clean" placeholder="输入 API Key" style="font-size: 12px;" />
             <button id="btn-toggle-key" type="button" class="btn-revoke" style="height: 42px; padding: 0 10px; font-size: 11px;">显示</button>
           </div>
           
           <!-- Gateway preset selector -->
-          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
             <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-muted);">
               <span>模型网关地址 (可选):</span>
               <button id="btn-toggle-custom-url" type="button" style="background: none; border: none; color: var(--broth-gold); font-size: 11px; cursor: pointer; font-weight: 600;">展开高级设置</button>
             </div>
             <div id="custom-url-box" class="hidden" style="display: flex; flex-direction: column; gap: 6px;">
               <input id="cfg-base-url" type="text" class="input-clean" placeholder="默认官方直连 (留空即可)" style="font-size: 12px;" />
-              <div style="display: flex; gap: 6px;">
-                <button type="button" class="quick-tag" onclick="setPresetUrl('')" style="flex: 1; text-align: center;">官方直连 (默认)</button>
-                <button type="button" class="quick-tag" onclick="setPresetUrl('https://ai-gateway.vercel.sh/typesafe')" style="flex: 1; text-align: center;">Vercel 网关</button>
+              <div id="gateway-presets" style="display: flex; gap: 6px;">
+                <!-- dynamic preset buttons populated by updateModelUI() -->
               </div>
             </div>
           </div>
         </div>
 
-        <!-- SECTION 2: CANDIDATE POOL (MENU RACK) -->
-        <div class="settings-section">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">❖ 个人候选池 (常吃清单)</span>
+        <!-- GROUP 2: HISTORY LOOKBACK WINDOW (防腻回溯窗口) -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <span class="settings-title">防腻回溯窗口</span>
+            <span id="history-hours-indicator" style="font-size: 11px; font-weight: 700; color: var(--steel-dark);">48 小时</span>
+          </div>
+          <p style="font-size: 11px; color: var(--ink-muted); line-height: 1.4;">
+            此时间段内吃过的菜品会被自动降权防腻，避免连续几天重复吃同一样。
+          </p>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="history-chip" data-hours="24" onclick="setHistoryHours(24)">24H (1天)</button>
+            <button type="button" class="history-chip active" data-hours="48" onclick="setHistoryHours(48)">48H (2天·默认)</button>
+            <button type="button" class="history-chip" data-hours="72" onclick="setHistoryHours(72)">72H (3天)</button>
+            <button type="button" class="history-chip" data-hours="168" onclick="setHistoryHours(168)">168H (1周)</button>
+          </div>
+        </div>
+
+        <!-- GROUP 3: CANDIDATE POOL (MENU RACK) -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <span class="settings-title">个人候选池 (常吃清单)</span>
             <span id="cfg-pool-count" style="font-size: 11px; font-weight: 700; color: var(--ink-muted);">共 0 款</span>
           </div>
           <div class="add-row">
@@ -847,86 +1110,129 @@
             <button id="btn-add-candidate" class="btn-add">添加</button>
           </div>
           <div id="candidate-chips" class="chip-grid" style="max-height: 160px; overflow-y: auto;"></div>
-          <div style="display: flex; justify-content: flex-end; padding-top: 2px;">
+          <div style="display: flex; justify-content: flex-end;">
             <button type="button" id="btn-reset-preset-candidates" style="background: none; border: none; color: var(--ink-muted); font-size: 11px; cursor: pointer;">
               恢复默认 8 款推荐菜单
             </button>
           </div>
         </div>
 
-        <!-- SECTION 3: RECENT HISTORY -->
-        <div class="settings-section">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; font-weight: 800; color: var(--steel-dark);">❖ 本机就餐历史</span>
+        <!-- GROUP 4: RECENT HISTORY -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <span class="settings-title">本机就餐历史</span>
             <button id="btn-clear-history" style="background: none; border: none; color: var(--stamp-red); font-size: 11px; cursor: pointer; font-weight: 600;">清空历史</button>
           </div>
           <div id="history-log-list" style="font-size: 11px; color: var(--ink-muted); max-height: 90px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;"></div>
         </div>
 
-        <!-- SECTION 4: BACKUP & MIGRATION -->
-        <div style="display: flex; gap: 8px;">
-          <button id="btn-export-data" type="button" class="btn-revoke" style="flex: 1; height: 38px; font-size: 11px;">
-            导出配置备份 (JSON)
+        <!-- GROUP 5: BACKUP & SAVE -->
+        <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 6px;">
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-export-data" type="button" class="btn-revoke" style="flex: 1; height: 38px; font-size: 11px;">
+              导出配置备份 (JSON)
+            </button>
+            <label class="btn-revoke" style="flex: 1; height: 38px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+              导入配置备份
+              <input id="input-import-file" type="file" accept=".json" style="display: none;" />
+            </label>
+          </div>
+
+          <!-- SAVE BUTTON -->
+          <button id="btn-save-settings" type="button" class="btn-eat" style="width: 100%; min-height: 52px; height: 52px; flex: none; flex-shrink: 0; font-size: 15px; font-weight: 800;">
+            完成并就绪
           </button>
-          <label class="btn-revoke" style="flex: 1; height: 38px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-            导入配置备份
-            <input id="input-import-file" type="file" accept=".json" style="display: none;" />
-          </label>
         </div>
-
-        <!-- SAVE BUTTON -->
-        <button id="btn-save-settings" type="button" class="btn-eat" style="width: 100%; height: 46px; font-size: 14px;">
-          完成并就绪
-        </button>
-
       </div>
     </div>
   </div>
 
-  <!-- BLIND BOX MODAL -->
+  <!-- BLIND BOX MODAL (REDESIGNED: TACTILE LOTTERY REEL) -->
   <div id="blindbox-modal" class="modal-backdrop hidden">
-    <div class="modal-box" style="text-align: center;">
+    <div class="modal-box" style="text-align: center; max-width: 400px;">
       <div class="modal-head">
-        <span>盲盒抽选</span>
+        <div style="display: flex; align-items: baseline; gap: 6px;">
+          <span>LUCKY DRAW · 盲盒神签</span>
+          <span style="font-size: 11px; font-weight: normal; color: #D1D5DB;">不计入历史</span>
+        </div>
         <button id="btn-close-blindbox" class="modal-close">✕</button>
       </div>
-      <div class="modal-content">
-        <div id="blindbox-drum" class="blindbox-drum">随机</div>
-        <div id="blindbox-result" class="hidden">
-          <div style="font-size: 11px; color: var(--ink-muted);">天意已决，绝不反悔</div>
-          <div id="blindbox-dish" style="font-size: 24px; font-weight: 900; margin: 6px 0;">--</div>
-          <div style="font-size: 11px; color: var(--broth-gold); background: var(--broth-bg); padding: 3px 8px; border-radius: 12px; display: inline-block;">
-            免记入历史 · 随时重抽
-          </div>
+      <div class="modal-content" style="padding: 18px 16px 20px; gap: 14px;">
+        <p style="font-size: 12px; color: var(--ink-muted); line-height: 1.4;">
+          从当前有效常吃候选池中均等随机摇号，彻底打消选择疲劳。
+        </p>
+        
+        <!-- Mechanical Slot Reel Window -->
+        <div class="lottery-window">
+          <div id="blindbox-drum" class="lottery-reel-text">点击摇号</div>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 6px;">
-          <button id="btn-roll-blindbox" class="btn-eat" style="background: var(--broth-gold);">摇一个</button>
-          <button id="btn-close-blindbox-2" class="btn-revoke">收起</button>
+
+        <!-- Settle Reveal Box -->
+        <div id="blindbox-result" class="hidden">
+          <div class="fortune-tag">天 意 已 决 · 绝 不 反 悔</div>
+          <div id="blindbox-dish" class="fortune-dish">--</div>
+          <div style="font-size: 11px; color: var(--ink-muted);">随性之选 · 随时可重新抽签</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-roll-blindbox" class="btn-slap" style="flex: 1; height: 44px; font-size: 14px; background: var(--broth-gold); box-shadow: 0 3px 0 #925807;">
+              抽取盲盒
+            </button>
+            <button id="btn-accept-blindbox" class="btn-eat hidden" style="flex: 1; height: 44px; font-size: 14px;">
+              去吃这道菜！
+            </button>
+          </div>
+          <button id="btn-close-blindbox-2" class="btn-revoke" style="width: 100%; height: 36px; font-size: 12px;">
+            收起关闭
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- DUEL MODAL -->
+  <!-- DUEL MODAL (REDESIGNED: THE VS FACE-OFF ARENA) -->
   <div id="duel-modal" class="modal-backdrop hidden">
-    <div class="modal-box" style="text-align: center;">
-      <div class="modal-head">
-        <span>DILEMMA DUEL · 终局对决</span>
+    <div class="modal-box" style="text-align: center; max-width: 420px;">
+      <div class="modal-head" style="background: #18221B;">
+        <div style="display: flex; align-items: baseline; gap: 6px;">
+          <span>DILEMMA DUEL · 双雄终局对决</span>
+        </div>
+        <button id="btn-close-duel" class="modal-close" onclick="document.getElementById('duel-modal').classList.add('hidden')">✕</button>
       </div>
-      <div class="modal-content">
-        <p style="font-size: 12px; color: var(--ink-muted);">势均力敌！轮盘一转定乾坤，单次终态绝不复摇。</p>
-        <div class="wheel-wrapper">
-          <div class="wheel-pointer">▼</div>
-          <!-- deslop-ignore-next-line 19 -->
-          <canvas id="duel-canvas" width="220" height="220" style="border-radius: 50%; border: 2.5px solid var(--machine-border); box-shadow: 0 4px 10px rgba(0,0,0,0.12);"></canvas>
+      <div class="modal-content" style="padding: 16px 16px 20px; gap: 14px;">
+        <!-- Face-off Arena (双雄对抗台) -->
+        <div class="vs-arena">
+          <div id="contender-card-0" class="contender-card">
+            <div id="contender-name-0" class="contender-name">--</div>
+          </div>
+          <div class="vs-badge">VS</div>
+          <div id="contender-card-1" class="contender-card">
+            <div id="contender-name-1" class="contender-name">--</div>
+          </div>
         </div>
-        <div id="duel-winner-box" class="hidden" style="margin-top: 4px;">
-          <div style="font-size: 11px; color: var(--ink-muted);">对决胜出：</div>
-          <div id="duel-winner-name" style="font-size: 24px; font-weight: 900; color: var(--stamp-red);">--</div>
+
+        <!-- Precision Duel Wheel Dial -->
+        <div class="duel-dial-stage">
+          <div class="duel-pointer">▼</div>
+          <canvas id="duel-canvas" width="220" height="220" class="duel-canvas"></canvas>
         </div>
-        <div style="margin-top: 8px;">
-          <button id="btn-spin-duel" class="btn-slap" style="height: 44px; font-size: 15px;">启动对决轮盘</button>
-          <button id="btn-accept-duel" class="btn-eat hidden" style="width: 100%; height: 44px; font-size: 15px;">接受对决，去吃！</button>
+
+        <!-- Settle Winner Box -->
+        <div id="duel-winner-box" class="hidden">
+          <div class="winner-stamp">终 局 胜 出</div>
+          <div id="duel-winner-name" class="winner-dish-title">--</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 2px;">
+          <button id="btn-spin-duel" class="btn-slap" style="width: 100%; min-height: 50px; height: 50px; flex: none; flex-shrink: 0; font-size: 15px; letter-spacing: 1px;">
+            启动双雄决战轮盘
+          </button>
+          <button id="btn-accept-duel" class="btn-eat hidden" style="width: 100%; min-height: 54px; height: 54px; flex: none; flex-shrink: 0; font-size: 16px; font-weight: 800;">
+            遵从决斗结果，去吃！
+          </button>
         </div>
       </div>
     </div>
@@ -947,6 +1253,7 @@
     let appCopy = null;
     let currentApiKey = '';
     let currentBaseUrl = '';
+    let currentModel = 'jev-latest';
     let currentCandidates = [];
     let currentHistory = [];
     let currentExclusions = new Set();
@@ -972,6 +1279,8 @@
     function loadLocalState() {
       currentApiKey = (localStorage.getItem('chilema_api_key') || '').trim();
       currentBaseUrl = (localStorage.getItem('chilema_base_url') || '').trim();
+      currentModel = (localStorage.getItem('chilema_model') || 'jev-latest').trim();
+      currentHistoryHours = parseInt(localStorage.getItem('chilema_history_hours') || '48', 10);
 
       const rawCandidates = localStorage.getItem('chilema_candidates');
       if (rawCandidates) {
@@ -1008,9 +1317,90 @@
     function saveLocalState() {
       localStorage.setItem('chilema_api_key', currentApiKey);
       localStorage.setItem('chilema_base_url', currentBaseUrl);
+      localStorage.setItem('chilema_model', currentModel);
+      localStorage.setItem('chilema_history_hours', currentHistoryHours);
       localStorage.setItem('chilema_candidates', JSON.stringify(currentCandidates));
       localStorage.setItem('chilema_history', JSON.stringify(currentHistory));
       updateStatusBadges();
+      updateModelUI();
+      updateHistoryHoursUI();
+    }
+
+    let currentHistoryHours = 48;
+
+    function setHistoryHours(hours) {
+      currentHistoryHours = parseInt(hours, 10) || 48;
+      localStorage.setItem('chilema_history_hours', currentHistoryHours);
+      updateHistoryHoursUI();
+      updateStatusBadges();
+      showToast(`已设置防腻回溯窗口为 ${currentHistoryHours} 小时`);
+    }
+
+    function updateHistoryHoursUI() {
+      const ind = document.getElementById('history-hours-indicator');
+      if (ind) ind.innerText = `${currentHistoryHours} 小时`;
+      document.querySelectorAll('.history-chip').forEach(chip => {
+        const h = parseInt(chip.getAttribute('data-hours'), 10);
+        chip.classList.toggle('active', h === currentHistoryHours);
+      });
+    }
+    function getOrCreateDeviceId() {
+      let devId = localStorage.getItem('chilema_device_id');
+      if (!devId) {
+        devId = 'dev_' + 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+        localStorage.setItem('chilema_device_id', devId);
+      }
+      return devId;
+    }
+
+    let currentQuotaRemaining = 10;
+    let currentQuotaLimit = 10;
+
+    async function fetchQuotaStatus() {
+      if (currentApiKey) {
+        updateQuotaUI();
+        return;
+      }
+      try {
+        const devId = getOrCreateDeviceId();
+        const res = await fetch(`/api/quota?device_id=${encodeURIComponent(devId)}`, {
+          headers: { 'X-Device-Id': devId }
+        });
+        if (res.ok) {
+          const q = await res.json();
+          currentQuotaRemaining = q.remaining;
+          currentQuotaLimit = q.limit;
+          updateQuotaUI();
+        }
+      } catch (e) {}
+    }
+
+    function updateQuotaUI() {
+      const quotaTag = document.getElementById('quota-tag');
+      const keyIndicator = document.getElementById('key-status-indicator');
+      if (currentApiKey) {
+        if (quotaTag) quotaTag.innerText = '个人 Key (无限制)';
+        if (keyIndicator) {
+          keyIndicator.innerText = '● 个人算力（无限制）';
+          keyIndicator.style.color = '#16A34A';
+        }
+        return;
+      }
+      if (quotaTag) {
+        quotaTag.innerText = `今日免费: ${currentQuotaRemaining}/${currentQuotaLimit}`;
+      }
+      if (keyIndicator) {
+        if (currentQuotaRemaining > 0) {
+          keyIndicator.innerText = `● 公共免费额度 (${currentQuotaRemaining}/${currentQuotaLimit})`;
+          keyIndicator.style.color = '#16A34A';
+        } else {
+          keyIndicator.innerText = '○ 免费额度已用尽 (待填Key)';
+          keyIndicator.style.color = '#DC2626';
+        }
+      }
     }
 
     function updateStatusBadges() {
@@ -1021,34 +1411,24 @@
       const modalCountEl = document.getElementById('cfg-pool-count');
       if (modalCountEl) modalCountEl.innerText = `共 ${currentCandidates.length} 款`;
 
-      // API Key indicator
-      const keyIndicator = document.getElementById('key-status-indicator');
-      if (keyIndicator) {
-        if (currentApiKey) {
-          keyIndicator.innerText = '● 独立算力已就绪';
-          keyIndicator.style.color = '#16A34A';
-        } else {
-          keyIndicator.innerText = '○ 待填入 Key';
-          keyIndicator.style.color = '#DC2626';
-        }
-      }
+      updateQuotaUI();
 
-      // Recent meals ribbon (within 48 hours)
+      // Recent meals ribbon (within currentHistoryHours)
       const recentBox = document.getElementById('recent-meal-tag');
-      const cutoff = new Date(Date.now() - 48 * 3600 * 1000);
+      const cutoff = new Date(Date.now() - currentHistoryHours * 3600 * 1000);
       const recentMeals = currentHistory.filter(h => {
         try { return new Date(h.timestamp) >= cutoff; } catch (e) { return true; }
       });
 
       if (recentMeals.length > 0) {
         const names = recentMeals.slice(-3).reverse().map(h => h.candidate).join('、');
-        recentBox.innerText = `48H已食: ${names}`;
+        recentBox.innerText = `${currentHistoryHours}H已食: ${names}`;
       } else {
-        recentBox.innerText = `48H历史: 暂无记录`;
+        recentBox.innerText = `${currentHistoryHours}H历史: 暂无记录`;
       }
     }
 
-    function getRecentHistoryForApi(hours = 48) {
+    function getRecentHistoryForApi(hours = currentHistoryHours) {
       const cutoff = new Date(Date.now() - hours * 3600 * 1000);
       return currentHistory.filter(h => {
         try { return new Date(h.timestamp) >= cutoff; } catch (e) { return true; }
@@ -1081,7 +1461,9 @@
         }
         if (appCopy.brand.footer) {
           const el = document.getElementById('footer-text');
-          if (el) el.innerText = appCopy.brand.footer;
+          if (el) {
+            el.innerHTML = `<span>${appCopy.brand.footer}</span> <span style="margin: 0 4px;">·</span> <a href="https://github.com/HaoxiangXia/fork-cast" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; border-bottom: 1.5px solid currentColor; font-weight: 700;">GitHub</a>`;
+          }
         }
       }
       if (appCopy.nav) {
@@ -1120,6 +1502,44 @@
               container.appendChild(btn);
             });
           }
+        }
+      }
+      if (appCopy.modals) {
+        if (appCopy.modals.settings) {
+          const s = appCopy.modals.settings;
+          const sTitle = document.getElementById('settings-modal-title') || document.querySelector('#settings-modal .modal-head span');
+          if (sTitle && s.title) sTitle.innerText = s.title;
+          const sSave = document.getElementById('btn-save-settings');
+          if (sSave && s.btn_save) sSave.innerText = s.btn_save;
+        }
+        if (appCopy.modals.welcome) {
+          const w = appCopy.modals.welcome;
+          const wTitle = document.querySelector('#welcome-modal .modal-head span');
+          if (wTitle && w.title) wTitle.innerText = w.title;
+          const wDesc = document.querySelector('#welcome-modal .modal-content > p');
+          if (wDesc && w.desc) wDesc.innerText = w.desc;
+          const btnDismiss = document.querySelector('#welcome-modal .btn-eat');
+          if (btnDismiss && w.btn_dismiss) btnDismiss.innerText = w.btn_dismiss;
+          const btnSettings = document.querySelector('#welcome-modal .btn-revoke');
+          if (btnSettings && w.btn_settings) btnSettings.innerText = w.btn_settings;
+        }
+        if (appCopy.modals.blind_box) {
+          const b = appCopy.modals.blind_box;
+          const bTitle = document.querySelector('#blindbox-modal .modal-head span');
+          if (bTitle && b.title) bTitle.innerText = b.title;
+          const bRoll = document.getElementById('btn-roll-blindbox');
+          if (bRoll && b.btn_roll) bRoll.innerText = b.btn_roll;
+          const bAccept = document.getElementById('btn-accept-blindbox');
+          if (bAccept && b.btn_accept) bAccept.innerText = b.btn_accept;
+        }
+        if (appCopy.modals.duel) {
+          const d = appCopy.modals.duel;
+          const dTitle = document.querySelector('#duel-modal .modal-head span');
+          if (dTitle && d.title) dTitle.innerText = d.title;
+          const dSpin = document.getElementById('btn-spin-duel');
+          if (dSpin && d.btn_spin) dSpin.innerText = d.btn_spin;
+          const dAccept = document.getElementById('btn-accept-duel');
+          if (dAccept && d.btn_accept) dAccept.innerText = d.btn_accept;
         }
       }
     }
@@ -1181,9 +1601,59 @@
       document.getElementById('settings-modal').classList.remove('hidden');
       document.getElementById('cfg-api-key').value = currentApiKey;
       document.getElementById('cfg-base-url').value = currentBaseUrl;
+      updateModelUI();
+      updateHistoryHoursUI();
       renderCandidateChips();
       renderHistoryLogs();
       updateStatusBadges();
+    }
+
+    function switchModel(model) {
+      currentModel = model;
+      localStorage.setItem('chilema_model', currentModel);
+      updateModelUI();
+      const modelName = currentModel.startsWith('d1') ? 'Liquid D1' : 'TypeSafe Jev';
+      showToast(`已切换至 ${modelName} 决策内核`);
+    }
+
+    function updateModelUI() {
+      const isD1 = currentModel.startsWith('d1');
+      const btnJev = document.getElementById('btn-model-jev');
+      const btnD1 = document.getElementById('btn-model-d1');
+      if (btnJev && btnD1) {
+        if (isD1) {
+          btnD1.classList.add('model-tab-active');
+          btnJev.classList.remove('model-tab-active');
+        } else {
+          btnJev.classList.add('model-tab-active');
+          btnD1.classList.remove('model-tab-active');
+        }
+      }
+
+      const keyInput = document.getElementById('cfg-api-key');
+      if (keyInput) {
+        keyInput.placeholder = isD1 ? '输入 Liquid API Key ($LIQUID_API_KEY)' : '输入 TypeSafe API Key (apikey_... 或 vck_...)';
+      }
+
+      const presetsBox = document.getElementById('gateway-presets');
+      if (presetsBox) {
+        if (isD1) {
+          presetsBox.innerHTML = `
+            <button type="button" class="quick-tag" onclick="setPresetUrl('')" style="flex: 1; text-align: center;">官方直连 (默认)</button>
+            <button type="button" class="quick-tag" onclick="setPresetUrl('https://api.liquid.ai/decisions')" style="flex: 1; text-align: center;">Liquid 直连</button>
+          `;
+        } else {
+          presetsBox.innerHTML = `
+            <button type="button" class="quick-tag" onclick="setPresetUrl('')" style="flex: 1; text-align: center;">官方直连 (默认)</button>
+            <button type="button" class="quick-tag" onclick="setPresetUrl('https://ai-gateway.vercel.sh/typesafe')" style="flex: 1; text-align: center;">Vercel 网关</button>
+          `;
+        }
+      }
+
+      const footerEl = document.getElementById('footer-text');
+      if (footerEl) {
+        footerEl.innerHTML = `<span>${getCopy('brand.footer', '吃什么 · 随性就餐决策 · SYSTEM 1 MODEL')}</span> <span style="margin: 0 4px;">·</span> <a href="https://github.com/HaoxiangXia/fork-cast" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; border-bottom: 1.5px solid currentColor; font-weight: 700;">GitHub</a>`;
+      }
     }
 
     function closeSettingsModal() {
@@ -1219,7 +1689,13 @@
       document.getElementById('cfg-base-url').value = url;
       currentBaseUrl = url;
       saveLocalState();
-      showToast(url ? '已切换至 Vercel 网关' : '已恢复官方直连');
+      let tip = '已恢复官方直连';
+      if (url.includes('vercel')) {
+        tip = '已切换至 Vercel 网关';
+      } else if (url.includes('liquid')) {
+        tip = '已切换至 Liquid 直连网关';
+      }
+      showToast(tip);
     }
 
     function renderCandidateChips() {
@@ -1369,9 +1845,9 @@
         return;
       }
 
-      // Check BYOK API Key
-      if (!currentApiKey) {
-        showToast('请先在设置中填入你的 Jev API Key');
+      // If user has no personal key and quota is known to be 0
+      if (!currentApiKey && currentQuotaRemaining <= 0) {
+        showToast('今日 10 次免费额度已用尽，请在设置中配置个人 API Key！');
         openSettingsModal();
         return;
       }
@@ -1386,27 +1862,52 @@
       const btn = document.getElementById('btn-decide');
       const btnText = document.getElementById('btn-decide-text');
       btn.disabled = true;
-      btnText.innerText = '正在调动 JEV 裁决...';
+      const loadingText = currentModel.startsWith('d1') ? '正在调动 D1 裁决...' : '正在调动 JEV 裁决...';
+      btnText.innerText = loadingText;
+      const devId = getOrCreateDeviceId();
 
       try {
         const res = await fetch('/api/decide', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Device-Id': devId
+          },
           body: JSON.stringify({
             craving: craving,
             exclusions: Array.from(currentExclusions),
             candidates: currentCandidates,
-            recent_history: getRecentHistoryForApi(48),
-            api_key: currentApiKey,
-            base_url: currentBaseUrl
+            recent_history: getRecentHistoryForApi(currentHistoryHours),
+            history_window_hours: currentHistoryHours,
+            api_key: currentApiKey || null,
+            base_url: currentBaseUrl || null,
+            model: currentModel,
           })
         });
 
+        if (res.status === 429) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = typeof errData.detail === 'string'
+            ? errData.detail
+            : (errData.detail && errData.detail.message) || '今日 10 次免费额度已用尽，请在设置中配置个人 API Key！';
+          currentQuotaRemaining = 0;
+          updateQuotaUI();
+          showToast(errMsg);
+          openSettingsModal();
+          btn.disabled = false;
+          btnText.innerText = '拍 板 决 策';
+          return;
+        }
+
         const data = await res.json();
+        if (data.quota_remaining !== undefined && data.quota_remaining !== null) {
+          currentQuotaRemaining = data.quota_remaining;
+          if (data.quota_limit) currentQuotaLimit = data.quota_limit;
+          updateQuotaUI();
+        }
         lastDecisionResult = data;
         btn.disabled = false;
         btnText.innerText = '拍 板 决 策';
-
         if (data.verdict === 'dilemma_duel') {
           duelContenders = data.alternatives && data.alternatives.length >= 2 ? data.alternatives : [data.primary];
           duelWinner = data.primary;
@@ -1438,7 +1939,14 @@
       let actionButtons = '';
       let probRows = '';
 
-      const stampText = getCopy('ticket.stamps.' + data.verdict, '拍板落定');
+      const stampMap = {
+        decisive_pick: getCopy('ticket.stamps.decisive', '拍板落定'),
+        soft_pick: getCopy('ticket.stamps.soft', '倾向建议'),
+        impasse: getCopy('ticket.stamps.impasse', '神仙难救'),
+        indifference: getCopy('ticket.stamps.indifference', '盲盒邀约'),
+        dilemma_duel: '势均力敌'
+      };
+      const stampText = stampMap[data.verdict] || getCopy('ticket.stamps.' + data.verdict, '拍板落定');
       const btnEatText = getCopy('ticket.actions.eat', '去吃！');
       const btnRevokeText = getCopy('ticket.actions.revoke', '撤销并排除');
       const btnRefocusText = getCopy('ticket.actions.refocus', '重新整理需求');
@@ -1474,6 +1982,14 @@
             <button onclick="openBlindBoxModal()" class="btn-full" style="background: var(--broth-gold);">${btnBlindBoxText}</button>
           </div>
         `;
+      } else if (data.verdict === 'dilemma_duel') {
+        stampMarkup = `<div class="stamp-seal duel">势均力敌</div>`;
+        actionButtons = `
+          <div class="ticket-actions">
+            <button onclick="acceptMeal('${data.primary}')" class="btn-eat">接受对决，去吃！</button>
+            <button onclick="openDuelModal()" class="btn-revoke" style="color: var(--broth-gold); border-color: var(--broth-gold);">查看对决轮盘</button>
+          </div>
+        `;
       }
 
       if (data.probabilities && Object.keys(data.probabilities).length > 0) {
@@ -1485,7 +2001,7 @@
         probRows = `
           <div class="prob-breakdown">
             <div style="display: flex; justify-content: space-between; font-weight: 700; color: var(--steel-dark);">
-              <span>${getCopy('ticket.labels.confidence', 'JEV 校准置信度')}</span>
+              <span>${(data.model && data.model.startsWith('d1')) || currentModel.startsWith('d1') ? 'D1 校准置信度' : getCopy('ticket.labels.confidence', 'JEV 校准置信度')}</span>
               <span>${(data.confidence*100).toFixed(0)}%</span>
             </div>
             <div style="font-size: 10px; color: var(--ink-muted); line-height: 1.3;">
@@ -1501,7 +2017,7 @@
         <div class="ticket-card">
           ${stampMarkup}
           <div class="ticket-header">
-            <div class="ticket-brand">${getCopy('ticket.header_brand', '吃了吗 · 专属餐券')}</div>
+            <div class="ticket-brand">${getCopy('ticket.header_brand', '吃什么 · 专属餐券')}</div>
             <div class="ticket-time">${timeStr}</div>
           </div>
           <div class="ticket-verdict-box">
@@ -1559,16 +2075,29 @@
       document.getElementById('btn-spin-duel').classList.remove('hidden');
       document.getElementById('btn-accept-duel').classList.add('hidden');
       document.getElementById('duel-winner-box').classList.add('hidden');
+
+      // Populate contender cards
+      const c0 = duelContenders[0] || '选项 A';
+      const c1 = duelContenders[1] || '选项 B';
+      document.getElementById('contender-name-0').innerText = c0;
+      document.getElementById('contender-name-1').innerText = c1;
+
+      const card0 = document.getElementById('contender-card-0');
+      const card1 = document.getElementById('contender-card-1');
+      if (card0) card0.className = 'contender-card';
+      if (card1) card1.className = 'contender-card';
+
       drawWheel(0);
     }
 
     function drawWheel(rotation) {
       const canvas = document.getElementById('duel-canvas');
+      if (!canvas) return;
       const ctx = canvas.getContext('2d');
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
       const r = cx - 4;
-      const n = duelContenders.length;
+      const n = duelContenders.length || 2;
       const arc = (2 * Math.PI) / n;
       const colors = ['#D73318', '#C27911', '#1A241E', '#0284C7'];
 
@@ -1582,6 +2111,9 @@
         ctx.arc(cx, cy, r, angle, angle + arc);
         ctx.lineTo(cx, cy);
         ctx.fill();
+        
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
         ctx.stroke();
 
         ctx.save();
@@ -1589,17 +2121,20 @@
         ctx.rotate(angle + arc / 2);
         ctx.textAlign = 'right';
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 13px sans-serif';
-        ctx.fillText(duelContenders[i], r - 14, 4);
+        ctx.font = '900 14px sans-serif';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(duelContenders[i] || `候选 ${i+1}`, r - 16, 5);
         ctx.restore();
       }
 
+      // Center Hub
       ctx.beginPath();
-      ctx.arc(cx, cy, 10, 0, 2 * Math.PI);
+      ctx.arc(cx, cy, 14, 0, 2 * Math.PI);
       ctx.fillStyle = '#FFFFFF';
       ctx.fill();
       ctx.strokeStyle = '#1E2721';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
 
@@ -1629,6 +2164,15 @@
 
         drawWheel(currentAngle);
 
+        // Alternate contender card pulse during spin
+        const card0 = document.getElementById('contender-card-0');
+        const card1 = document.getElementById('contender-card-1');
+        if (card0 && card1) {
+          const tick = Math.floor(elapsed / 120) % 2;
+          card0.classList.toggle('active-contender', tick === 0);
+          card1.classList.toggle('active-contender', tick === 1);
+        }
+
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
@@ -1637,6 +2181,13 @@
           document.getElementById('duel-winner-box').classList.remove('hidden');
           document.getElementById('duel-winner-name').innerText = duelWinner;
           document.getElementById('btn-accept-duel').classList.remove('hidden');
+
+          // Mark winner and dimmed cards
+          if (card0 && card1) {
+            const isZeroWinner = (duelWinner === (duelContenders[0] || ''));
+            card0.className = 'contender-card ' + (isZeroWinner ? 'winner' : 'dimmed');
+            card1.className = 'contender-card ' + (!isZeroWinner ? 'winner' : 'dimmed');
+          }
         }
       }
       requestAnimationFrame(animate);
@@ -1649,36 +2200,68 @@
     });
 
     // BLIND BOX (Client-Side Instant Roll)
+    // BLIND BOX (Mechanical Fortune Slot Reel)
+    let lastBlindBoxDish = '';
+
     function openBlindBoxModal() {
       document.getElementById('blindbox-modal').classList.remove('hidden');
       document.getElementById('blindbox-result').classList.add('hidden');
-      document.getElementById('blindbox-drum').innerText = '随机';
+      document.getElementById('btn-accept-blindbox').classList.add('hidden');
+      document.getElementById('blindbox-drum').innerText = '准备摇号...';
       rollBlindBox();
     }
 
     function rollBlindBox() {
       const drum = document.getElementById('blindbox-drum');
-      drum.classList.add('spinning');
-      playClickSound();
+      const acceptBtn = document.getElementById('btn-accept-blindbox');
+      const rollBtn = document.getElementById('btn-roll-blindbox');
+      acceptBtn.classList.add('hidden');
+      rollBtn.disabled = true;
 
       const available = currentCandidates.filter(c => !currentExclusions.has(c));
       if (available.length === 0) {
-        drum.classList.remove('spinning');
         showToast('无可用菜品开盲盒');
+        rollBtn.disabled = false;
         return;
       }
 
       const chosen = available[Math.floor(Math.random() * available.length)];
+      lastBlindBoxDish = chosen;
 
-      setTimeout(() => {
-        drum.classList.remove('spinning');
-        drum.innerText = '完成';
-        document.getElementById('blindbox-result').classList.remove('hidden');
-        document.getElementById('blindbox-dish').innerText = chosen;
-        playStampSound();
-      }, 400);
+      // Mechanical slot reel animation
+      let steps = 0;
+      const maxSteps = 16;
+      
+      function reelTick() {
+        steps++;
+        const tempItem = available[Math.floor(Math.random() * available.length)];
+        drum.innerText = tempItem;
+        drum.style.transform = `translateY(${steps % 2 === 0 ? '-3px' : '3px'})`;
+        playClickSound();
+
+        if (steps < maxSteps) {
+          const delay = 40 + Math.pow(steps / maxSteps, 2) * 160;
+          setTimeout(reelTick, delay);
+        } else {
+          drum.style.transform = 'translateY(0)';
+          drum.innerText = chosen;
+          playStampSound();
+          document.getElementById('blindbox-result').classList.remove('hidden');
+          document.getElementById('blindbox-dish').innerText = chosen;
+          acceptBtn.classList.remove('hidden');
+          rollBtn.disabled = false;
+        }
+      }
+
+      reelTick();
     }
 
+    document.getElementById('btn-accept-blindbox').addEventListener('click', () => {
+      if (lastBlindBoxDish) {
+        document.getElementById('blindbox-modal').classList.add('hidden');
+        acceptMeal(lastBlindBoxDish);
+      }
+    });
     document.getElementById('btn-open-blindbox').addEventListener('click', openBlindBoxModal);
     document.getElementById('btn-roll-blindbox').addEventListener('click', rollBlindBox);
     document.getElementById('btn-close-blindbox').addEventListener('click', () => {
@@ -1714,9 +2297,33 @@
       }
     });
 
-    // INITIAL LOAD
+    // INITIAL LOAD (含判断结果 DEMO)
     loadLocalState();
+    updateModelUI();
     initCopy();
+    fetchQuotaStatus();
+    checkFirstTimeWelcome();
+
+    function checkFirstTimeWelcome() {
+      const hasSeen = localStorage.getItem('chilema_welcome_shown');
+      if (!hasSeen) {
+        const modal = document.getElementById('welcome-modal');
+        if (modal) modal.classList.remove('hidden');
+      }
+    }
+
+    function dismissWelcomeModal(goToSettings = false) {
+      const modal = document.getElementById('welcome-modal');
+      if (modal) modal.classList.add('hidden');
+      if (goToSettings) {
+        openSettingsModal();
+      }
+    }
+
+    function closeWelcomeModal() {
+      dismissWelcomeModal(false);
+    }
+    
   </script>
 </body>
 </html>
