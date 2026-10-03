@@ -165,6 +165,25 @@
   }
 }
 ```
+- **前端物理模块化架构（Scheme A · 原生 ESM 分离体系）**：
+  - **零构建与极速交付（Zero-build & Python-only Deploy）**：
+    - 前端严格保持纯原生架构，严禁引入 Node.js、npm/pnpm 或打包转译工具链，维持单 Python 容器（uv）秒级构建部署。
+    - 服务端在 `fork_cast/app.py` 中通过 `app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")` 对外暴露静态资源。
+  - **静态资源目录与职责分离**：
+    - `src/fork_cast/static/index.html`：纯结构骨架（~350 行），在 `<head>` 中引入外链样式与原生 ESM 入口。
+    - `src/fork_cast/static/css/style.css`：集中维护原生 CSS Reset、Design Tokens、物理票据纹理与微动效。
+    - `src/fork_cast/static/js/`：基于原生浏览器 `<script type="module">` 的高内聚子模块体系：
+      - `audio.js`：Web Audio API 物理拟真按键与盖章音效合成（纯代码振荡器与增益节点合成，零外部音效文件依赖）；
+      - `storage.js`：单机状态中心，封装 `localStorage` 持久化、候选池预设、防腻回溯窗口计算、备份导入导出及 `device_id` 管理；
+      - `api.js`：FastAPI 接口通信客户端，封装 `/api/copy`、`/api/quota` 及 `/api/decide` 统一调用；
+      - `duel.js`：双雄终局对决转盘，封装 Canvas 原生绘制与三次贝塞尔减速缓动物理模型；
+      - `blindbox.js`：机械滚筒盲盒，封装非固定频率逐帧抽号阻尼动画与不入用餐历史的随性抽取；
+      - `ticket.js`：热敏撕纸小票生成器，负责动态印章（`.stamp-seal`）、菜品名、置信度分解条、操作按钮与评语区（`.ticket-quote`）装配及撤销/选定逻辑；
+      - `ui.js`：DOM 状态同步中心，管理顶部状态胶囊、时钟脉冲、侧边设置抽屉、排除标签区及 Toast 通知；
+      - `app.js`：前端 ESM 主入口总线，负责装配各子模块、完成全局事件监听绑定及 `window` 兼容桥接（向 `window` 显式挂载内联与动态模板函数）。
+  - **餐券评语区样式契约（`.ticket-quote`）**：
+    - 充当小票上的机器裁决陈述区（Verdict Rationale），展示 `data.message`。
+    - 采用浅灰纯平底色（`#F9FAFB`）、4px 圆角与 12px 炭灰色字，保持极简纸质感，无任何侧边粗色条等装饰物。
 
 ---
 
