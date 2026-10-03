@@ -390,24 +390,20 @@ class DecisionEngine:
                 model=model
             )
 
-        # 3. Dynamic semantic and character overlap matching (works on any custom candidates)
+        # 3. Specific craving match
         scores = {}
         for c in effective_pool:
             score = 0.05
-            # Character overlap
-            overlap = sum(1 for char in c if char in craving)
-            if overlap > 0:
-                score += overlap * 0.25
-
-            # Semantic cuisine associations
-            if any(w in craving for w in ["面", "粉", "汤", "热", "暖", "喝", "碳水"]) and any(w in c for w in ["面", "粉", "汤", "烫", "拉面", "米线"]):
+            if ("面" in craving or "热汤" in craving) and ("面" in c or "烫" in c):
                 score += 0.40
-            if any(w in craving for w in ["肉", "快餐", "汉堡", "炸鸡", "烤", "硬菜", "饱", "饭", "犒劳", "重口"]) and any(w in c for w in ["肉", "汉堡", "鸡", "牛", "饭", "排", "烧", "麦当劳"]):
+            if ("快餐" in craving or "汉堡" in craving or "炸鸡" in craving) and ("麦当劳" in c):
+                score += 0.60
+            if ("米饭" in craving or "饱腹" in craving) and ("饭" in c or "黄焖鸡" in c):
                 score += 0.45
-            if any(w in craving for w in ["清淡", "减脂", "低卡", "不油", "轻食", "素", "消化"]) and any(w in c for w in ["沙拉", "素", "煮", "粥", "蔬", "轻食", "关东煮"]):
-                score += 0.45
-            if any(w in craving for w in ["辣", "川", "湘", "过瘾", "纠结", "对决"]) and any(w in c for w in ["辣", "烫", "川", "湘", "小面", "火锅"]):
-                score += 0.40
+            if ("清淡" in craving or "减脂" in craving) and ("沙拉" in c or "关东煮" in c):
+                score += 0.50
+            if ("纠结" in craving or "对决" in craving) and ("麻辣烫" in c or "重庆小面" in c):
+                score = 0.35
             scores[c] = score
 
         # Normalize
