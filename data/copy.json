@@ -96,7 +96,7 @@
       "desc": "从当前有效常吃候选池中均等随机摇号，彻底打消选择疲劳。",
       "drum_idle": "点击摇号",
       "settle_badge": "天 意 已 决 · 绝 不 反 悔",
-      "hint": "随性之选 · 随时可重新抽签",
+      "hint": "随性之选",
       "btn_roll": "抽取盲盒",
       "btn_accept": "去吃这道菜！",
       "btn_close": "收起关闭"
@@ -119,7 +119,7 @@
     "network_error": "网络错误，请检查服务",
     "blind_box_failed": "盲盒抽取失败",
     "revoke_failed": "撤销失败",
-    "quota_exhausted": "今日 10 次免费额度已用尽（北京时间次日重置）。请在设置中配置个人 API Key 继续使用！",
+    "quota_exhausted": "今日 10 次免费额度已用尽（北京时间次日重置）。如需继续使用，请在设置中配置个人 API Key ！",
     "history_hours_set": "已将防腻回溯窗口设为 {hours} 小时",
     "model_switched": "已切换至 {model} 决策内核"
   }

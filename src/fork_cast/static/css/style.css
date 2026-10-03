@@ -484,7 +484,6 @@
 
     .ticket-quote {
       background: #F9FAFB;
-      border-left: 3px solid var(--steel-dark);
       padding: 8px 12px;
       border-radius: 4px;
       font-size: 12px;
