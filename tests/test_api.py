@@ -21,6 +21,16 @@ def test_api_full_flow(tmp_path):
     assert r_html.status_code == 200
     assert "吃什么" in r_html.text
 
+    # 1.1b Static assets served
+    r_css = client.get("/static/css/style.css")
+    assert r_css.status_code == 200
+    assert ":root" in r_css.text
+    r_js = client.get("/static/js/app.js")
+    assert r_js.status_code == 200
+    assert "submitDecision" in r_js.text
+    r_ticket_js = client.get("/static/js/ticket.js")
+    assert r_ticket_js.status_code == 200
+    assert "ticket-quote" in r_ticket_js.text
     # 1.2 Copy API served
     r_copy = client.get("/api/copy")
     assert r_copy.status_code == 200

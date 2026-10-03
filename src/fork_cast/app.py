@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fork_cast.models import (
     DecisionRequest,
     DecisionResponse,
@@ -19,7 +20,8 @@ from fork_cast.storage import CandidateStorage, HistoryStorage
 from fork_cast.engine import DecisionEngine
 from fork_cast.copy_manager import copy_manager
 
-STATIC_INDEX = Path(__file__).resolve().parent / "static" / "index.html"
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+STATIC_INDEX = STATIC_DIR / "index.html"
 DEMO_FLAT_HTML = Path(__file__).resolve().parent.parent.parent / "docs" / "demo-flat.html"
 
 
@@ -43,6 +45,9 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    if STATIC_DIR.exists():
+        app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     cs = candidate_storage or CandidateStorage()
     hs = history_storage or HistoryStorage()
