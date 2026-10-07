@@ -136,9 +136,19 @@ export function updateModelUI() {
     }
   }
 
+  renderFooter(getCopy('brand.footer', '吃什么 · 随性就餐决策 · SYSTEM 1 MODEL'));
+}
+
+export function renderFooter(tagline) {
+  const text = tagline || getCopy('brand.footer', '吃什么 · 随性就餐决策 · SYSTEM 1 MODEL');
+  const taglineEl = document.getElementById('footer-tagline');
+  if (taglineEl) {
+    taglineEl.textContent = text;
+    return;
+  }
   const footerEl = document.getElementById('footer-text');
   if (footerEl) {
-    footerEl.innerHTML = `<span>${getCopy('brand.footer', '吃什么 · 随性就餐决策 · SYSTEM 1 MODEL')}</span> <span style="margin: 0 4px;">·</span> <a href="https://github.com/HaoxiangXia/fork-cast" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; border-bottom: 1.5px solid currentColor; font-weight: 700;">GitHub</a>`;
+    footerEl.textContent = text;
   }
 }
 
@@ -344,10 +354,7 @@ export function applyCopy() {
       if (el) el.innerHTML = copy.brand.subtitle.replace('：', '：<br/>');
     }
     if (copy.brand.footer) {
-      const el = document.getElementById('footer-text');
-      if (el) {
-        el.innerHTML = `<span>${copy.brand.footer}</span> <span style="margin: 0 4px;">·</span> <a href="https://github.com/HaoxiangXia/fork-cast" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; border-bottom: 1.5px solid currentColor; font-weight: 700;">GitHub</a>`;
-      }
+      renderFooter(copy.brand.footer);
     }
   }
 
