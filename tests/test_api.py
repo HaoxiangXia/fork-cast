@@ -31,6 +31,12 @@ def test_api_full_flow(tmp_path):
     r_ticket_js = client.get("/static/js/ticket.js")
     assert r_ticket_js.status_code == 200
     assert "ticket-quote" in r_ticket_js.text
+    r_fav_ico = client.get("/favicon.ico")
+    assert r_fav_ico.status_code == 200
+    assert r_fav_ico.headers["content-type"] == "image/x-icon"
+    r_fav_png = client.get("/static/favicon.png")
+    assert r_fav_png.status_code == 200
+    assert "image/png" in r_fav_png.headers["content-type"]
     # 1.2 Copy API served
     r_copy = client.get("/api/copy")
     assert r_copy.status_code == 200
