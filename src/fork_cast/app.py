@@ -1,10 +1,18 @@
+import hashlib
 import random
 from pathlib import Path
 from typing import List, Optional
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
+
+
+class CacheControlledStaticFiles(StaticFiles):
+    def file_response(self, *args, **kwargs) -> Response:
+        resp = super().file_response(*args, **kwargs)
+        resp.headers["Cache-Control"] = "no-cache, must-revalidate"
+        return resp
 from fork_cast.models import (
     DecisionRequest,
     DecisionResponse,
@@ -23,6 +31,7 @@ from fork_cast.copy_manager import copy_manager
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 STATIC_INDEX = STATIC_DIR / "index.html"
 DEMO_FLAT_HTML = Path(__file__).resolve().parent.parent.parent / "docs" / "demo-flat.html"
+STATIC_FAVICON = STATIC_DIR / "favicon.ico"
 
 
 def create_app(
@@ -47,7 +56,7 @@ def create_app(
     )
 
     if STATIC_DIR.exists():
-        app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+        app.mount("/static", CacheControlledStaticFiles(directory=STATIC_DIR), name="static")
 
     cs = candidate_storage or CandidateStorage()
     hs = history_storage or HistoryStorage()
@@ -57,17 +66,54 @@ def create_app(
         history_storage=hs,
         mock=mock
     )
+    def get_asset_hashes() -> tuple[str, str]:
+        css_file = STATIC_DIR / "css" / "style.css"
+        css_v = hashlib.md5(css_file.read_bytes()).hexdigest()[:8] if css_file.exists() else "1"
+        hasher = hashlib.md5()
+        js_dir = STATIC_DIR / "js"
+        if js_dir.exists():
+            for js_file in sorted(js_dir.glob("*.js")):
+                hasher.update(js_file.name.encode())
+                hasher.update(js_file.read_bytes())
+        js_v = hasher.hexdigest()[:8]
+        return css_v, js_v
 
     @app.get("/", include_in_schema=False)
-    def serve_frontend():
-        if STATIC_INDEX.exists():
-            return FileResponse(STATIC_INDEX)
-        return {"message": "Frontend static file not found"}
+    def serve_frontend(request: Request):
+        if not STATIC_INDEX.exists():
+            return {"message": "Frontend static file not found"}
+
+        raw_html = STATIC_INDEX.read_text(encoding="utf-8")
+        css_v, js_v = get_asset_hashes()
+        injected_html = raw_html.replace(
+            'href="/static/css/style.css"',
+            f'href="/static/css/style.css?v={css_v}"'
+        ).replace(
+            'src="/static/js/app.js"',
+            f'src="/static/js/app.js?v={js_v}"'
+        )
+
+        etag = f'"{hashlib.md5(injected_html.encode("utf-8")).hexdigest()}"'
+        headers = {
+            "Cache-Control": "no-cache, must-revalidate",
+            "ETag": etag
+        }
+
+        if request.headers.get("if-none-match") == etag:
+            return Response(status_code=304, headers=headers)
+
+        return HTMLResponse(content=injected_html, headers=headers)
+    @app.get("/favicon.ico", include_in_schema=False)
+    def serve_favicon():
+        if STATIC_FAVICON.exists():
+            return FileResponse(STATIC_FAVICON, media_type="image/x-icon")
+        raise HTTPException(status_code=404, detail="Favicon not found")
+
 
     @app.get("/demo", include_in_schema=False)
     def serve_flat_demo():
         if DEMO_FLAT_HTML.exists():
-            return FileResponse(DEMO_FLAT_HTML)
+            return FileResponse(DEMO_FLAT_HTML, headers=REVALIDATE_HEADERS)
         return {"message": "Flat demo static file not found"}
 
     @app.get("/api/health")
