@@ -30,7 +30,14 @@ import {
   renderTicket,
   acceptMeal,
   revokeDecision,
-  refocusInput
+  refocusInput,
+  openShareModal,
+  closeShareModal,
+  copyShareLink,
+  saveShareImage,
+  renderSharedBanner,
+  adoptSharedMeal,
+  dismissSharedBanner
 } from './ticket.js';
 import {
   showToast,
@@ -70,11 +77,17 @@ window.removeExclusion = removeExclusion;
 window.acceptMeal = acceptMeal;
 window.revokeDecision = revokeDecision;
 window.refocusInput = refocusInput;
+window.renderTicket = renderTicket;
 window.openBlindBoxModal = openBlindBoxModal;
 window.openDuelModal = openDuelModal;
 window.closeWelcomeModal = closeWelcomeModal;
 window.dismissWelcomeModal = dismissWelcomeModal;
-
+window.openShareModal = openShareModal;
+window.closeShareModal = closeShareModal;
+window.copyShareLink = copyShareLink;
+window.saveShareImage = saveShareImage;
+window.adoptSharedMeal = adoptSharedMeal;
+window.dismissSharedBanner = dismissSharedBanner;
 // DECIDE FLOW
 async function submitDecision() {
   const cravingInput = document.getElementById('craving-input');
@@ -105,6 +118,7 @@ async function submitDecision() {
   if (btnText) btnText.innerText = loadingText;
   const devId = getOrCreateDeviceId();
 
+  let data;
   try {
     const res = await postDecisionApi({
       craving: craving,
@@ -131,16 +145,28 @@ async function submitDecision() {
       return;
     }
 
-    const data = await res.json();
-    if (data.quota_remaining !== undefined && data.quota_remaining !== null) {
-      state.currentQuotaRemaining = data.quota_remaining;
-      if (data.quota_limit) state.currentQuotaLimit = data.quota_limit;
-      updateQuotaUI();
+    if (!res.ok) {
+      throw new Error(`Server returned ${res.status}`);
     }
-    state.lastDecisionResult = data;
+
+    data = await res.json();
+  } catch (err) {
     if (btn) btn.disabled = false;
     if (btnText) btnText.innerText = '拍 板 决 策';
+    showToast('请求失败，请检查网络与设置');
+    return;
+  }
 
+  if (data.quota_remaining !== undefined && data.quota_remaining !== null) {
+    state.currentQuotaRemaining = data.quota_remaining;
+    if (data.quota_limit) state.currentQuotaLimit = data.quota_limit;
+    updateQuotaUI();
+  }
+  state.lastDecisionResult = data;
+  if (btn) btn.disabled = false;
+  if (btnText) btnText.innerText = '拍 板 决 策';
+
+  try {
     if (data.verdict === 'dilemma_duel') {
       state.duelContenders = data.alternatives && data.alternatives.length >= 2 ? data.alternatives : [data.primary];
       state.duelWinner = data.primary;
@@ -148,10 +174,9 @@ async function submitDecision() {
     } else {
       renderTicket(data);
     }
-  } catch (err) {
-    if (btn) btn.disabled = false;
-    if (btnText) btnText.innerText = '拍 板 决 策';
-    showToast('请求失败，请检查网络与设置');
+  } catch (renderErr) {
+    console.error('Ticket rendering error:', renderErr);
+    showToast('餐券生成异常，请重试');
   }
 }
 
@@ -236,6 +261,23 @@ function init() {
   fetchQuotaStatus();
   checkFirstTimeWelcome();
 
+  // Check friend share URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('share') === '1' && urlParams.get('dish')) {
+    const sharedDish = urlParams.get('dish');
+    const sharedQuote = urlParams.get('quote') || '';
+    renderSharedBanner(sharedDish, sharedQuote);
+    renderTicket({
+      verdict: 'decisive_pick',
+      primary: sharedDish,
+      alternatives: [],
+      message: sharedQuote || '好友向你投递了一张就餐决策券，建议一同享用！',
+      probabilities: { [sharedDish]: 0.94 },
+      confidence: 0.94,
+      auto_logged: false,
+      model: 'jev-latest'
+    });
+  }
   setInterval(updateClock, 1000);
   updateClock();
 }

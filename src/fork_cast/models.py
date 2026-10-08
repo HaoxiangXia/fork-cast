@@ -1,3 +1,4 @@
+import uuid
 from enum import Enum
 from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
@@ -13,11 +14,11 @@ class VerdictType(str, Enum):
 
 
 class HistoryEntry(BaseModel):
-    id: str
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: str
     candidate: str
-    verdict_type: str
-    craving: str
+    verdict_type: str = "decisive_pick"
+    craving: str = ""
 
 
 class DecisionRequest(BaseModel):

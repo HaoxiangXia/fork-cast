@@ -436,5 +436,16 @@ export function applyCopy() {
       const dAccept = document.getElementById('btn-accept-duel');
       if (dAccept && d.btn_accept) dAccept.innerText = d.btn_accept;
     }
+    if (copy.modals.share) {
+      const sh = copy.modals.share;
+      const shTitle = document.getElementById('share-modal-title');
+      if (shTitle && sh.title) shTitle.innerText = sh.title;
+      const shHint = document.getElementById('share-modal-hint');
+      if (shHint && sh.hint) shHint.innerText = sh.hint;
+      const btnCopy = document.getElementById('btn-share-copy');
+      if (btnCopy && sh.btn_copy_link) btnCopy.innerText = sh.btn_copy_link;
+      const btnSave = document.getElementById('btn-share-save');
+      if (btnSave && sh.btn_save_image) btnSave.innerText = sh.btn_save_image;
+    }
   }
 }

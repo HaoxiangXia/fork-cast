@@ -514,7 +514,9 @@
 
     .btn-eat {
       flex: 1;
+      min-width: 0;
       height: 48px;
+      padding: 0 10px;
       background: var(--green-go);
       color: #FFFFFF;
       font-size: 15px;
@@ -534,6 +536,7 @@
     }
 
     .btn-revoke {
+      flex: none;
       height: 48px;
       padding: 0 12px;
       background: #F3F4F6;
@@ -546,8 +549,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      white-space: nowrap;
     }
-
     .btn-revoke:active {
       background: #FEE2E2;
       color: var(--stamp-red);
@@ -564,6 +567,189 @@
       border-radius: 6px;
       cursor: pointer;
       box-shadow: 0 3px 0 var(--machine-border);
+    }
+    /* Thermal Receipt Ticket Assembly & Physical Paper Separation */
+    .ticket-assembly {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: ticketSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .ticket-paper-card {
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.12));
+      position: relative;
+    }
+
+    .ticket-paper {
+      background: var(--receipt-paper);
+      border: 2px solid var(--machine-border);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      padding: 18px 14px 10px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ticket-zigzag-svg {
+      display: block;
+      width: 100%;
+      height: 10px;
+      margin-top: -1px;
+    }
+
+    /* Receipt Thermal Footer */
+    .receipt-footer-section {
+      border-top: 1.5px dashed #D1D5DB;
+      padding-top: 10px;
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .receipt-qr-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 2px;
+    }
+
+    .receipt-serial {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--steel-dark);
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .receipt-qr-box {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+      background: #FFFFFF;
+      border: 1px solid #1E2721;
+      border-radius: 2px;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .receipt-qr-box svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .receipt-qr-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .receipt-qr-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--steel-dark);
+      letter-spacing: 0.2px;
+    }
+
+    .receipt-qr-sub {
+      font-size: 10px;
+      color: var(--ink-muted);
+      line-height: 1.3;
+    }
+
+    .receipt-engine-tag {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: var(--broth-gold);
+      letter-spacing: 0.2px;
+      margin-top: 1px;
+    }
+
+    .receipt-notice {
+      text-align: center;
+      font-size: 9.5px;
+      color: var(--ink-muted);
+      letter-spacing: 0.3px;
+      border-top: 1px dashed #E5E7EB;
+      padding-top: 6px;
+    }
+
+    /* Machine Action Controls (Separated from Paper) */
+    .ticket-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-share-ticket {
+      flex: 1;
+      min-width: 0;
+      height: 48px;
+      padding: 0 10px;
+      background: #FFFFFF;
+      color: var(--steel-dark);
+      font-size: 13px;
+      font-weight: 700;
+      border: 2px solid var(--machine-border);
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 3px 0 var(--machine-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .btn-share-ticket:hover {
+      background: #F3F4F6;
+      transform: translateY(-1px);
+    }
+
+    .btn-share-ticket:active {
+      transform: translateY(3px);
+      box-shadow: 0 0 0 var(--machine-border);
+    }
+
+    .shared-banner {
+      background: var(--broth-bg);
+      border: 1.5px solid var(--broth-gold);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      animation: ticketSlide 0.3s ease-out;
+    }
+
+    .shared-banner-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--broth-gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .shared-banner-desc {
+      font-size: 11px;
+      color: var(--ink-muted);
+      line-height: 1.4;
+    }
+
+    .shared-banner-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
     }
 
     /* Solid Scrim Modals (Zero glassmorphism slop) */

@@ -41,6 +41,9 @@
       </div>
 
       <!-- CRAVING INPUT ZONE -->
+      <!-- SHARED MEAL BANNER -->
+      <div id="shared-banner-container"></div>
+
       <section class="craving-zone">
         <div class="field-label">
           <span id="label-input-title">诉求投币口</span>
@@ -345,6 +348,31 @@
           </button>
           <button id="btn-accept-duel" class="btn-eat hidden" style="width: 100%; min-height: 54px; height: 54px; flex: none; flex-shrink: 0; font-size: 16px; font-weight: 800;">
             遵从决斗结果，去吃！
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- SHARE TICKET MODAL -->
+  <div id="share-modal" class="modal-backdrop hidden">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-head">
+        <span id="share-modal-title">分享专属餐券</span>
+        <button id="btn-close-share" class="modal-close" onclick="closeShareModal()">✕</button>
+      </div>
+      <div class="modal-content" style="padding: 16px; gap: 14px;">
+        <div id="share-preview-stage" style="display: flex; justify-content: center; overflow-y: auto; max-height: 420px; padding: 4px;">
+          <!-- cloned clean ticket paper displayed here -->
+        </div>
+        <div id="share-modal-hint" style="font-size: 11px; color: var(--ink-muted); text-align: center;">
+          长按或点击下方按钮保存餐券卡片，发送给好友一起决定
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="btn-share-copy" class="btn-eat" style="flex: 1; height: 42px; font-size: 13px;" onclick="copyShareLink()">
+            复制分享链接
+          </button>
+          <button type="button" id="btn-share-save" class="btn-revoke" style="flex: 1; height: 42px; font-size: 13px; color: var(--steel-dark);" onclick="saveShareImage()">
+            保存餐券图片
           </button>
         </div>
       </div>

@@ -44,10 +44,16 @@ DEFAULT_COPY: Dict[str, Any] = {
             "confidence_jev": "JEV 校准置信度",
             "confidence_d1": "D1 校准置信度",
             "distribution": "候选分布:",
-            "alternatives_prefix": "备选:"
+            "alternatives_prefix": "备选:",
+            "serial_prefix": "NO. ",
+            "qr_title": "扫码核验 · 查看同款决策",
+            "qr_sub": "吃什么 · 随性就餐决策机",
+            "qr_tag": "SYSTEM 1 MODEL PROBABILISTIC PICK",
+            "notice": "※ 凭此券准时就餐 · 建议趁热享用 ※"
         },
         "actions": {
             "eat": "去吃！",
+            "share": "分享餐券",
             "revoke": "撤销并排除",
             "refocus": "重新整理需求",
             "draw_blind_box": "直接抽个盲盒",
@@ -114,6 +120,12 @@ DEFAULT_COPY: Dict[str, Any] = {
             "winner_stamp": "终 局 胜 出",
             "btn_spin": "启动双雄决战轮盘",
             "btn_accept": "遵从决斗结果，去吃！"
+        },
+        "share": {
+            "title": "分享专属餐券",
+            "hint": "长按或点击下方按钮保存餐券卡片，发送给好友一起决定",
+            "btn_copy_link": "复制分享链接",
+            "btn_save_image": "保存餐券图片"
         }
     },
     "toasts": {
@@ -128,7 +140,17 @@ DEFAULT_COPY: Dict[str, Any] = {
         "revoke_failed": "撤销失败",
         "quota_exhausted": "今日 10 次免费额度已用尽（北京时间次日重置）。请在设置中配置个人 API Key 继续使用！",
         "history_hours_set": "已将防腻回溯窗口设为 {hours} 小时",
-        "model_switched": "已切换至 {model} 决策内核"
+        "model_switched": "已切换至 {model} 决策内核",
+        "link_copied": "分享链接已复制到剪贴板！",
+        "image_downloaded": "餐券图片已下载！",
+        "shared_adopted": "已将【{dish}】加入今日就餐足迹！"
+    },
+    "shared_banner": {
+        "title_prefix": "来自好友的就餐拍板：【{dish}】",
+        "unrecorded_tag": "未写入本地足迹",
+        "desc_prefix": "好友决策依据：“{quote}”",
+        "btn_adopt": "跟着吃同款",
+        "btn_dismiss": "我要自己拍板"
     }
 }
 
