@@ -140,7 +140,6 @@
   },
   "shared_banner": {
     "title_prefix": "来自好友的就餐拍板：【{dish}】",
-    "unrecorded_tag": "未写入本地足迹",
     "desc_prefix": "好友决策依据：“{quote}”",
     "btn_adopt": "跟着吃同款",
     "btn_dismiss": "我要自己拍板"

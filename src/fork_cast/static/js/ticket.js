@@ -2,7 +2,7 @@
 
 import { playClickSound, playStampSound } from './audio.js';
 import { state, getCopy, saveLocalState } from './storage.js';
-import { createQRCodeSVG } from './qrcode.js';
+import { createQRCodeSVG, createQRCodeMatrix } from './qrcode.js';
 import {
   showToast,
   updateStatusBadges,
@@ -212,114 +212,218 @@ export function copyShareLink() {
 
 export function saveShareImage() {
   if (!lastDecisionData) return;
-  const dish = lastDecisionData.primary || '就餐决策';
-  const msg = lastDecisionData.message || '';
+  const data = lastDecisionData;
+  const dish = data.primary || '就餐决策';
+  const msg = data.message || '';
+  const verdict = data.verdict || 'decisive_pick';
+  const conf = data.confidence !== undefined ? data.confidence : 0.95;
+  const modelName = data.model || state.currentModel || 'jev-latest';
+  const alts = Array.isArray(data.alternatives) ? data.alternatives : [];
   const now = new Date();
   const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const serialNo = `FC-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${Math.floor(1000 + Math.random()*9000)}`;
+  const shareUrl = `${window.location.origin}${window.location.pathname}?share=1&dish=${encodeURIComponent(dish)}`;
+
+  const stampMap = {
+    decisive_pick: { text: getCopy('ticket.stamps.decisive', '拍板落定'), color: '#D73318' },
+    soft_pick: { text: getCopy('ticket.stamps.soft', '倾向建议'), color: '#C27911' },
+    impasse: { text: getCopy('ticket.stamps.impasse', '神仙难救'), color: '#1F2937' },
+    indifference: { text: getCopy('ticket.stamps.indifference', '盲盒邀约'), color: '#C27911' },
+    dilemma_duel: { text: '势均力敌', color: '#B45309' }
+  };
+  const stamp = stampMap[verdict] || { text: '拍板落定', color: '#D73318' };
 
   const canvas = document.createElement('canvas');
-  const w = 480;
-  const h = 640;
-  canvas.width = w;
-  canvas.height = h;
+  const dpr = 2;
+  const w = 420;
+  const h = 570;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
   const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
 
   // Background tile
   ctx.fillStyle = '#D1DCD6';
   ctx.fillRect(0, 0, w, h);
 
-  // Ticket shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.14)';
-  ctx.fillRect(44, 44, 392, 536);
+  const cardX = 30;
+  const cardY = 24;
+  const cardW = 360;
+  const cardH = 500;
+  const toothW = 15;
+  const toothH = 9;
 
-  // Ticket paper body
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(40, 40, 400, 510);
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = '#1E2721';
-  ctx.strokeRect(40, 40, 400, 510);
-
-  // Stamp seal
+  // Paper shadow
   ctx.save();
-  ctx.translate(340, 85);
-  ctx.rotate(-8 * Math.PI / 180);
-  ctx.strokeStyle = '#D73318';
-  ctx.lineWidth = 2.5;
-  ctx.strokeRect(-50, -16, 100, 32);
-  ctx.fillStyle = '#D73318';
-  ctx.font = 'bold 15px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('拍板落定', 0, 0);
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.beginPath();
+  ctx.roundRect(cardX + 4, cardY + 6, cardW, cardH, [6, 6, 0, 0]);
+  ctx.fill();
   ctx.restore();
 
-  // Header
-  ctx.fillStyle = '#6B7280';
+  // Unified Paper Card with Sawtooth path
+  ctx.beginPath();
+  ctx.moveTo(cardX, cardY + 6);
+  ctx.arcTo(cardX, cardY, cardX + 6, cardY, 6);
+  ctx.lineTo(cardX + cardW - 6, cardY);
+  ctx.arcTo(cardX + cardW, cardY, cardX + cardW, cardY + 6, 6);
+  ctx.lineTo(cardX + cardW, cardY + cardH);
+
+  // Sawtooth bottom from right to left
+  const teeth = Math.round(cardW / toothW);
+  for (let i = teeth; i > 0; i--) {
+    const rx = cardX + (i - 0.5) * toothW;
+    const lx = cardX + (i - 1) * toothW;
+    ctx.lineTo(rx, cardY + cardH + toothH);
+    ctx.lineTo(lx, cardY + cardH);
+  }
+  ctx.lineTo(cardX, cardY + 6);
+  ctx.closePath();
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#1E2721';
+  ctx.stroke();
+
+  // Stamp Seal
+  ctx.save();
+  ctx.translate(cardX + cardW - 55, cardY + 36);
+  ctx.rotate(-7 * Math.PI / 180);
+  ctx.strokeStyle = stamp.color;
+  ctx.lineWidth = 2.2;
+  ctx.strokeRect(-42, -14, 84, 28);
+  ctx.fillStyle = stamp.color;
   ctx.font = 'bold 13px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('吃什么 · 专属餐券', 240, 75);
-  ctx.font = '11px monospace';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(stamp.text, 0, 0);
+  ctx.restore();
+
+  // Header & Time
+  ctx.fillStyle = '#6B7280';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(getCopy('ticket.header_brand', '吃什么 · 专属餐券'), cardX + cardW / 2, cardY + 28);
+  ctx.font = '10px monospace';
   ctx.fillStyle = '#59675F';
-  ctx.fillText(timeStr, 240, 95);
+  ctx.fillText(timeStr, cardX + cardW / 2, cardY + 44);
 
   // Dashed divider
   ctx.strokeStyle = '#D1D5DB';
-  ctx.setLineDash([4, 4]);
+  ctx.setLineDash([3, 3]);
   ctx.beginPath();
-  ctx.moveTo(60, 115);
-  ctx.lineTo(420, 115);
+  ctx.moveTo(cardX + 16, cardY + 58);
+  ctx.lineTo(cardX + cardW - 16, cardY + 58);
   ctx.stroke();
   ctx.setLineDash([]);
 
   // Dish Title
   ctx.fillStyle = '#141A16';
-  ctx.font = '900 36px sans-serif';
-  ctx.fillText(dish, 240, 175);
+  ctx.font = '900 28px sans-serif';
+  ctx.fillText(dish, cardX + cardW / 2, cardY + 104);
+
+  // Alternatives
+  if (alts.length > 0) {
+    ctx.fillStyle = '#59675F';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(`${getCopy('ticket.labels.alternatives_prefix', '备选:')} ${alts.join('、')}`, cardX + cardW / 2, cardY + 128);
+  }
 
   // Quote Box
+  const quoteY = alts.length > 0 ? cardY + 144 : cardY + 126;
   ctx.fillStyle = '#F9FAFB';
-  ctx.fillRect(60, 210, 360, 54);
-  ctx.strokeStyle = '#1E2721';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(60, 210, 360, 54);
+  ctx.fillRect(cardX + 16, quoteY, cardW - 32, 44);
   ctx.fillStyle = '#374151';
-  ctx.font = '13px sans-serif';
-  ctx.textAlign = 'left';
-  const displayMsg = msg.length > 22 ? msg.slice(0, 22) + '...' : msg;
-  ctx.fillText('“' + displayMsg + '”', 75, 242);
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  const displayMsg = msg.length > 24 ? msg.slice(0, 24) + '...' : msg;
+  ctx.fillText('“' + displayMsg + '”', cardX + cardW / 2, quoteY + 26);
 
-  // Serial Number
-  ctx.fillStyle = '#1E2721';
-  ctx.textAlign = 'left';
+  // Confidence Row
+  const confY = quoteY + 56;
+  ctx.fillStyle = '#F3F4F6';
+  ctx.fillRect(cardX + 16, confY, cardW - 32, 28);
+  ctx.strokeStyle = '#D1D5DB';
+  ctx.setLineDash([3, 3]);
+  ctx.strokeRect(cardX + 16, confY, cardW - 32, 28);
+  ctx.setLineDash([]);
   ctx.font = 'bold 11px monospace';
-  ctx.fillText('NO. ' + ('FC-' + now.getFullYear() + '8848'), 60, 305);
+  ctx.fillStyle = '#1A241E';
+  ctx.textAlign = 'left';
+  const confLabel = modelName.startsWith('d1') ? getCopy('ticket.labels.confidence_d1', 'D1 校准置信度') : getCopy('ticket.labels.confidence_jev', 'JEV 校准置信度');
+  ctx.fillText(confLabel, cardX + 26, confY + 18);
+  ctx.textAlign = 'right';
+  ctx.fillText(`${Math.round(conf * 100)}%`, cardX + cardW - 26, confY + 18);
+
+  // Dashed divider
+  const divY = confY + 42;
+  ctx.strokeStyle = '#D1D5DB';
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(cardX + 16, divY);
+  ctx.lineTo(cardX + cardW - 16, divY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // QR Code & Meta Section
+  const qrBoxY = divY + 12;
+  const qrX = cardX + 20;
+  const qrSize = 64;
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(qrX, qrBoxY, qrSize, qrSize);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#1E2721';
+  ctx.strokeRect(qrX, qrBoxY, qrSize, qrSize);
+
+  try {
+    const matrix = createQRCodeMatrix(shareUrl);
+    const pad = 3;
+    const cSize = (qrSize - pad * 2) / matrix.length;
+    ctx.fillStyle = '#141A16';
+    for (let r = 0; r < matrix.length; r++) {
+      for (let c = 0; c < matrix.length; c++) {
+        if (matrix[r][c]) {
+          ctx.fillRect(qrX + pad + c * cSize, qrBoxY + pad + r * cSize, Math.ceil(cSize), Math.ceil(cSize));
+        }
+      }
+    }
+  } catch (qrErr) {
+    console.warn('Canvas QR render fallback:', qrErr);
+  }
+
+  // Meta Text
+  const metaX = qrX + qrSize + 12;
+  ctx.textAlign = 'left';
+  ctx.font = 'bold 10px monospace';
+  ctx.fillStyle = '#1A241E';
+  ctx.fillText(`${getCopy('ticket.labels.serial_prefix', 'NO. ')}${serialNo}`, metaX, qrBoxY + 14);
+
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillStyle = '#1A241E';
+  ctx.fillText(getCopy('ticket.labels.qr_title', '扫码核验 · 查看同款决策'), metaX, qrBoxY + 30);
+
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#59675F';
+  ctx.fillText(getCopy('ticket.labels.qr_sub', '吃什么 · 随性就餐决策机'), metaX, qrBoxY + 44);
+
+  ctx.font = 'bold 8.5px monospace';
+  ctx.fillStyle = '#C27911';
+  ctx.fillText(getCopy('ticket.labels.qr_tag', 'SYSTEM 1 MODEL PROBABILISTIC PICK'), metaX, qrBoxY + 58);
 
   // Notice
-  ctx.fillStyle = '#59675F';
-  ctx.font = '11px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('※ 凭此券准时就餐 · 扫码测测今天吃什么 ※', 240, 480);
-  ctx.font = '10px monospace';
-  ctx.fillText('FORK-CAST DECISION ENGINE · OPEN SOURCE', 240, 502);
-
-  // Sawtooth bottom
-  ctx.fillStyle = '#D1DCD6';
-  ctx.beginPath();
-  ctx.moveTo(40, 550);
-  for (let sx = 40; sx <= 440; sx += 16) {
-    ctx.lineTo(sx + 8, 538);
-    ctx.lineTo(sx + 16, 550);
-  }
-  ctx.lineTo(440, 600);
-  ctx.lineTo(40, 600);
-  ctx.closePath();
-  ctx.fill();
+  ctx.font = '9.5px sans-serif';
+  ctx.fillStyle = '#59675F';
+  ctx.fillText(getCopy('ticket.labels.notice', '※ 凭此券准时就餐 · 建议趁热享用 ※'), cardX + cardW / 2, qrBoxY + 84);
 
   const a = document.createElement('a');
   a.download = `fork-cast-${dish}.png`;
   a.href = canvas.toDataURL('image/png');
   document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   showToast(getCopy('toasts.image_downloaded', '餐券图片已下载！'));
 }
 
@@ -329,7 +433,6 @@ export function renderSharedBanner(dish, quote) {
   const cleanDish = dish.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const cleanQuote = quote ? quote.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '随性拍板';
   const titleTpl = getCopy('shared_banner.title_prefix', '来自好友的就餐拍板：【{dish}】').replace('{dish}', cleanDish);
-  const unrecorded = getCopy('shared_banner.unrecorded_tag', '未写入本地足迹');
   const descTpl = getCopy('shared_banner.desc_prefix', '好友决策依据：“{quote}”').replace('{quote}', cleanQuote);
   const btnAdopt = getCopy('shared_banner.btn_adopt', '跟着吃同款');
   const btnDismiss = getCopy('shared_banner.btn_dismiss', '我要自己拍板');
@@ -337,12 +440,11 @@ export function renderSharedBanner(dish, quote) {
     <div class="shared-banner">
       <div class="shared-banner-title">
         <span>${titleTpl}</span>
-        <span style="font-size: 10px; font-weight: normal; color: var(--ink-muted);">${unrecorded}</span>
       </div>
       <div class="shared-banner-desc">${descTpl}</div>
       <div class="shared-banner-actions">
-        <button type="button" class="btn-eat" style="height: 36px; font-size: 12px; flex: 1;" onclick="adoptSharedMeal('${cleanDish}')">${btnAdopt}</button>
-        <button type="button" class="btn-revoke" style="height: 36px; font-size: 12px; flex: 1;" onclick="dismissSharedBanner()">${btnDismiss}</button>
+        <button type="button" class="btn-eat" style="height: 36px; font-size: 12px; flex: 1; min-width: 0;" onclick="adoptSharedMeal('${cleanDish}')">${btnAdopt}</button>
+        <button type="button" class="btn-share-ticket" style="height: 36px; font-size: 12px; flex: 1; min-width: 0;" onclick="dismissSharedBanner()">${btnDismiss}</button>
       </div>
     </div>
   `;

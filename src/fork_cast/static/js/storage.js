@@ -95,9 +95,17 @@ export function saveLocalState() {
 
 export function getRecentHistoryForApi(hours = state.currentHistoryHours) {
   const cutoff = new Date(Date.now() - hours * 3600 * 1000);
-  return state.currentHistory.filter(h => {
-    try { return new Date(h.timestamp) >= cutoff; } catch (e) { return true; }
-  });
+  return state.currentHistory
+    .filter(h => {
+      try { return new Date(h.timestamp) >= cutoff; } catch (e) { return true; }
+    })
+    .map(h => ({
+      id: h.id || ('hist_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)),
+      timestamp: h.timestamp || new Date().toISOString(),
+      candidate: h.candidate,
+      verdict_type: h.verdict_type || 'decisive_pick',
+      craving: h.craving || ''
+    }));
 }
 
 export function exportBackupData() {
