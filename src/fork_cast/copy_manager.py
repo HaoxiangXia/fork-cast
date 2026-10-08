@@ -74,7 +74,7 @@ DEFAULT_COPY: Dict[str, Any] = {
             "subtitle": "零标签随性决策",
             "desc": "基于 System 1 概率决策模型，无需为菜品打标签或维护复杂属性，直接输入大白话快速拍板。",
             "points": {
-                "quota_title": "每天 10 次公共免费算力",
+                "quota_title": "每天 10 次免费算力",
                 "quota_desc": "系统默认提供每日 10 次免费决策额度（北京时间每日零点自动刷新）。",
                 "byok_title": "支持自备个人 Key（无限制）",
                 "byok_desc": "可在设置中填入你的 TypeSafe 或 Liquid API Key，直连私有算力，无限制极速调用。",
@@ -87,7 +87,7 @@ DEFAULT_COPY: Dict[str, Any] = {
         "settings": {
             "title": "机箱侧板 · 个人设置与菜单",
             "group_credentials": "决策内核与算力凭据",
-            "group_credentials_desc": "支持 System 1 概率决策模型。系统默认提供每日 10 次公共免费算力；填入个人 Key 无限制极速调用。",
+            "group_credentials_desc": "支持 System 1 概率决策模型。系统默认提供每日 10 次免费算力；填入个人 Key 无限制极速调用。",
             "group_history_window": "防腻回溯窗口",
             "group_history_window_desc": "此时间段内吃过的菜品会被自动降权防腻，避免连续几天重复吃同一样。",
             "group_pool": "个人候选池 (常吃清单)",
