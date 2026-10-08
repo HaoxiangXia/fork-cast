@@ -236,7 +236,7 @@ export function saveShareImage() {
   const canvas = document.createElement('canvas');
   const dpr = 2;
   const w = 420;
-  const h = 580;
+  const h = 600;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   const ctx = canvas.getContext('2d');
@@ -249,7 +249,7 @@ export function saveShareImage() {
   const cardX = 30;
   const cardY = 24;
   const cardW = 360;
-  const cardH = 510;
+  const cardH = 530;
   const toothW = 15;
   const toothH = 9;
 
@@ -385,57 +385,73 @@ export function saveShareImage() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // QR Code & Meta Section
-  const qrBoxY = divY + 12;
-  const qrX = cardX + 20;
-  const qrSize = 64;
+  // QR Code & Meta Section (Crisp, High-Resolution 90px QR)
+  const qrBoxY = divY + 14;
+  const qrX = cardX + 18;
+  const qrSize = 90;
 
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(qrX, qrBoxY, qrSize, qrSize);
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.5;
   ctx.strokeStyle = '#1E2721';
   ctx.strokeRect(qrX, qrBoxY, qrSize, qrSize);
 
   try {
     const matrix = createQRCodeMatrix(shareUrl);
-    const pad = 3;
-    const cSize = (qrSize - pad * 2) / matrix.length;
-    ctx.fillStyle = '#141A16';
-    for (let r = 0; r < matrix.length; r++) {
-      for (let c = 0; c < matrix.length; c++) {
-        if (matrix[r][c]) {
-          ctx.fillRect(qrX + pad + c * cSize, qrBoxY + pad + r * cSize, Math.ceil(cSize), Math.ceil(cSize));
-        }
+    const mLen = matrix.length;
+    const pad = 4;
+    const avail = qrSize - pad * 2;
+
+    // 1:1 Pixel Buffer with Nearest-Neighbor rendering (zero-blur, crisp hard edges)
+    const qrCanvas = document.createElement('canvas');
+    qrCanvas.width = mLen;
+    qrCanvas.height = mLen;
+    const qrCtx = qrCanvas.getContext('2d');
+    const imgData = qrCtx.createImageData(mLen, mLen);
+    for (let r = 0; r < mLen; r++) {
+      for (let c = 0; c < mLen; c++) {
+        const idx = (r * mLen + c) * 4;
+        const dark = matrix[r][c];
+        imgData.data[idx] = dark ? 20 : 255;
+        imgData.data[idx + 1] = dark ? 26 : 255;
+        imgData.data[idx + 2] = dark ? 22 : 255;
+        imgData.data[idx + 3] = 255;
       }
     }
+    qrCtx.putImageData(imgData, 0, 0);
+
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(qrCanvas, qrX + pad, qrBoxY + pad, avail, avail);
+    ctx.restore();
   } catch (qrErr) {
     console.warn('Canvas QR render fallback:', qrErr);
   }
 
-  // Meta Text
-  const metaX = qrX + qrSize + 12;
+  // Meta Text (Aligned with 90px QR)
+  const metaX = qrX + qrSize + 14;
   ctx.textAlign = 'left';
   ctx.font = 'bold 10px monospace';
   ctx.fillStyle = '#1A241E';
-  ctx.fillText(`${getCopy('ticket.labels.serial_prefix', 'NO. ')}${serialNo}`, metaX, qrBoxY + 14);
+  ctx.fillText(`${getCopy('ticket.labels.serial_prefix', 'NO. ')}${serialNo}`, metaX, qrBoxY + 18);
 
   ctx.font = 'bold 11px sans-serif';
   ctx.fillStyle = '#1A241E';
-  ctx.fillText(getCopy('ticket.labels.qr_title', '扫码核验 · 查看同款决策'), metaX, qrBoxY + 30);
+  ctx.fillText(getCopy('ticket.labels.qr_title', '扫码核验 · 查看同款决策'), metaX, qrBoxY + 38);
 
   ctx.font = '10px sans-serif';
   ctx.fillStyle = '#59675F';
-  ctx.fillText(getCopy('ticket.labels.qr_sub', '吃什么 · 随性就餐决策机'), metaX, qrBoxY + 44);
+  ctx.fillText(getCopy('ticket.labels.qr_sub', '吃什么 · 随性就餐决策机'), metaX, qrBoxY + 54);
 
   ctx.font = 'bold 8.5px monospace';
   ctx.fillStyle = '#C27911';
-  ctx.fillText(getCopy('ticket.labels.qr_tag', 'SYSTEM 1 MODEL PROBABILISTIC PICK'), metaX, qrBoxY + 58);
+  ctx.fillText(getCopy('ticket.labels.qr_tag', 'SYSTEM 1 MODEL PROBABILISTIC PICK'), metaX, qrBoxY + 70);
 
   // Notice
   ctx.textAlign = 'center';
   ctx.font = '9.5px sans-serif';
   ctx.fillStyle = '#59675F';
-  ctx.fillText(getCopy('ticket.labels.notice', '※ 凭此券准时就餐 · 建议趁热享用 ※'), cardX + cardW / 2, qrBoxY + 84);
+  ctx.fillText(getCopy('ticket.labels.notice', '※ 凭此券准时就餐 · 建议趁热享用 ※'), cardX + cardW / 2, qrBoxY + qrSize + 22);
 
   const a = document.createElement('a');
   a.download = `fork-cast-${dish}.png`;
