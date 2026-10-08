@@ -32,6 +32,7 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 STATIC_INDEX = STATIC_DIR / "index.html"
 DEMO_FLAT_HTML = Path(__file__).resolve().parent.parent.parent / "docs" / "demo-flat.html"
 STATIC_FAVICON = STATIC_DIR / "favicon.ico"
+REVALIDATE_HEADERS = {"Cache-Control": "no-cache, must-revalidate"}
 
 
 def create_app(

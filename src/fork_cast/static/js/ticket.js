@@ -87,7 +87,7 @@ export function renderTicket(data) {
     probRows = `
       <div class="prob-breakdown">
         <div style="display: flex; justify-content: space-between; font-weight: 700; color: var(--steel-dark);">
-          <span>${(data.model && data.model.startsWith('d1')) || state.currentModel.startsWith('d1') ? 'D1 校准置信度' : getCopy('ticket.labels.confidence', 'JEV 校准置信度')}</span>
+          <span>${getCopy('ticket.labels.confidence', 'System 1 校准置信度')}</span>
           <span>${(data.confidence*100).toFixed(0)}%</span>
         </div>
         <div style="font-size: 10px; color: var(--ink-muted); line-height: 1.3;">
@@ -236,7 +236,7 @@ export function saveShareImage() {
   const canvas = document.createElement('canvas');
   const dpr = 2;
   const w = 420;
-  const h = 570;
+  const h = 580;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   const ctx = canvas.getContext('2d');
@@ -249,7 +249,7 @@ export function saveShareImage() {
   const cardX = 30;
   const cardY = 24;
   const cardW = 360;
-  const cardH = 500;
+  const cardH = 510;
   const toothW = 15;
   const toothH = 9;
 
@@ -340,25 +340,44 @@ export function saveShareImage() {
   const displayMsg = msg.length > 24 ? msg.slice(0, 24) + '...' : msg;
   ctx.fillText('“' + displayMsg + '”', cardX + cardW / 2, quoteY + 26);
 
-  // Confidence Row
+  // Confidence & Distribution Box
+  const probs = data.probabilities && Object.keys(data.probabilities).length > 0 ? data.probabilities : null;
+  let topPairsStr = '';
+  if (probs) {
+    topPairsStr = Object.entries(probs)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([k,v]) => `${k}: ${(v*100).toFixed(0)}%`)
+      .join('  |  ');
+  }
+
   const confY = quoteY + 56;
+  const confBoxH = topPairsStr ? 46 : 28;
   ctx.fillStyle = '#F3F4F6';
-  ctx.fillRect(cardX + 16, confY, cardW - 32, 28);
+  ctx.fillRect(cardX + 16, confY, cardW - 32, confBoxH);
   ctx.strokeStyle = '#D1D5DB';
   ctx.setLineDash([3, 3]);
-  ctx.strokeRect(cardX + 16, confY, cardW - 32, 28);
+  ctx.strokeRect(cardX + 16, confY, cardW - 32, confBoxH);
   ctx.setLineDash([]);
+
   ctx.font = 'bold 11px monospace';
   ctx.fillStyle = '#1A241E';
   ctx.textAlign = 'left';
-  const confLabel = modelName.startsWith('d1') ? getCopy('ticket.labels.confidence_d1', 'D1 校准置信度') : getCopy('ticket.labels.confidence_jev', 'JEV 校准置信度');
+  const confLabel = getCopy('ticket.labels.confidence', 'System 1 校准置信度');
   ctx.fillText(confLabel, cardX + 26, confY + 18);
   ctx.textAlign = 'right';
   ctx.fillText(`${Math.round(conf * 100)}%`, cardX + cardW - 26, confY + 18);
 
+  if (topPairsStr) {
+    ctx.textAlign = 'left';
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = '#59675F';
+    const distPrefix = getCopy('ticket.labels.distribution', '候选分布:');
+    ctx.fillText(`${distPrefix} ${topPairsStr}`, cardX + 26, confY + 36);
+  }
+
   // Dashed divider
-  const divY = confY + 42;
-  ctx.strokeStyle = '#D1D5DB';
+  const divY = confY + confBoxH + 14;
   ctx.setLineDash([3, 3]);
   ctx.beginPath();
   ctx.moveTo(cardX + 16, divY);

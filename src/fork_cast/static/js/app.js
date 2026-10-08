@@ -4,6 +4,7 @@ import { playClickSound, playStampSound } from './audio.js';
 import { fetchCopyApi, fetchQuotaApi, postDecisionApi } from './api.js';
 import {
   state,
+  getCopy,
   loadLocalState,
   saveLocalState,
   getOrCreateDeviceId,
@@ -114,8 +115,7 @@ async function submitDecision() {
   const btn = document.getElementById('btn-decide');
   const btnText = document.getElementById('btn-decide-text');
   if (btn) btn.disabled = true;
-  const loadingText = state.currentModel.startsWith('d1') ? '正在调动 D1 裁决...' : '正在调动 JEV 裁决...';
-  if (btnText) btnText.innerText = loadingText;
+  const loadingText = getCopy('input.slap_loading', '正在调动 System 1 决策模型...');
   const devId = getOrCreateDeviceId();
 
   let data;

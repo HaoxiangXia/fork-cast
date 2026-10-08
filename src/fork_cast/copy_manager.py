@@ -26,8 +26,7 @@ DEFAULT_COPY: Dict[str, Any] = {
             {"label": "随便都行", "text": "随便来个，吃啥都行无所谓"}
         ],
         "slap_button": "拍 板 决 策",
-        "slap_loading_jev": "正在调动 JEV 裁决...",
-        "slap_loading_d1": "正在调动 D1 裁决...",
+        "slap_loading": "正在调动 System 1 决策模型...",
         "dispenser_slot": "▼ 出票导槽 ▼",
         "exclusion_prefix": "临时排除:"
     },
@@ -41,8 +40,7 @@ DEFAULT_COPY: Dict[str, Any] = {
             "duel": "势均力敌"
         },
         "labels": {
-            "confidence_jev": "JEV 校准置信度",
-            "confidence_d1": "D1 校准置信度",
+            "confidence": "System 1 校准置信度",
             "distribution": "候选分布:",
             "alternatives_prefix": "备选:",
             "serial_prefix": "NO. ",
@@ -89,7 +87,7 @@ DEFAULT_COPY: Dict[str, Any] = {
         "settings": {
             "title": "机箱侧板 · 个人设置与菜单",
             "group_credentials": "决策内核与算力凭据",
-            "group_credentials_desc": "支持 Jev 与 D1 决策模型。系统默认提供每日 10 次公共免费算力；填入个人 Key 无限制极速调用。",
+            "group_credentials_desc": "支持 System 1 概率决策模型。系统默认提供每日 10 次公共免费算力；填入个人 Key 无限制极速调用。",
             "group_history_window": "防腻回溯窗口",
             "group_history_window_desc": "此时间段内吃过的菜品会被自动降权防腻，避免连续几天重复吃同一样。",
             "group_pool": "个人候选池 (常吃清单)",
@@ -98,7 +96,7 @@ DEFAULT_COPY: Dict[str, Any] = {
         },
         "pool": {
             "title": "个人候选池 (常吃清单)",
-            "desc": "维护平时常吃常买的菜品清单。Jev / D1 大模型常识会自动解析属性，无需给菜品打标签。",
+            "desc": "维护平时常吃常买的菜品清单。System 1 模型常识会自动解析属性，无需给菜品打标签。",
             "placeholder": "新增菜品 / 餐馆名",
             "btn_add": "添加",
             "btn_reset": "恢复默认 8 款推荐菜单"
