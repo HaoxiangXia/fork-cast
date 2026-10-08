@@ -9,7 +9,8 @@ DEFAULT_COPY: Dict[str, Any] = {
     "brand": {
         "name": "吃什么",
         "subtitle": "解决每日人生难题：今天吃什么？",
-        "footer": "吃什么 · 随性就餐决策 · SYSTEM 1 MODEL"
+        "footer": "吃什么 · 随性就餐决策 · SYSTEM 1 MODEL",
+        "poster_subtitle": "随性就餐决策 · SYSTEM 1 MODEL"
     },
     "nav": {
         "blind_box": "盲盒",

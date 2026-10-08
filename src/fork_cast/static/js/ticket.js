@@ -210,14 +210,13 @@ export function copyShareLink() {
   }
 }
 
-export function saveShareImage() {
+export async function saveShareImage() {
   if (!lastDecisionData) return;
   const data = lastDecisionData;
   const dish = data.primary || '就餐决策';
   const msg = data.message || '';
   const verdict = data.verdict || 'decisive_pick';
   const conf = data.confidence !== undefined ? data.confidence : 0.95;
-  const modelName = data.model || state.currentModel || 'jev-latest';
   const alts = Array.isArray(data.alternatives) ? data.alternatives : [];
   const now = new Date();
   const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -233,12 +232,68 @@ export function saveShareImage() {
   };
   const stamp = stampMap[verdict] || { text: '拍板落定', color: '#D73318' };
 
+  // Load logo icon
+  const logoImg = new Image();
+  logoImg.crossOrigin = 'anonymous';
+  logoImg.src = '/static/apple-touch-icon.png';
+  await new Promise(r => {
+    logoImg.onload = r;
+    logoImg.onerror = r;
+    setTimeout(r, 250);
+  });
+  const userCraving = document.getElementById('craving-input')?.value?.trim() || data.craving || '';
+  const displayCraving = userCraving ? `“${userCraving.length > 22 ? userCraving.slice(0, 22) + '...' : userCraving}”` : '“随性就餐，直接拍板”';
+
+  // Measure distribution
+  const probs = data.probabilities && Object.keys(data.probabilities).length > 0 ? data.probabilities : null;
+  let topPairsStr = '';
+  if (probs) {
+    topPairsStr = Object.entries(probs)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([k,v]) => `${k}: ${(v*100).toFixed(0)}%`)
+      .join('  |  ');
+  }
+
+  // Pre-calculate exact vertical coordinates to eliminate dead whitespace
+  const w = 440;
+  const cardX = 24;
+  const cardW = w - 48;
+  const toothW = 15;
+  const toothH = 9;
+
+  const cravingBoxY = 74;
+  const cravingH = 46;
+  const cravingBottom = cravingBoxY + cravingH + 20;
+
+  // Shift slit section down with comfortable 18px margin
+  const labelY = cravingBottom + 18;
+  const slitY = labelY + 11;
+  const cardY = slitY + 8 + 16; // 16px gap below slit
+
+  const headerTimeY = cardY + 44;
+  const dishY = cardY + 98;
+  const altsH = alts.length > 0 ? 22 : 0;
+  const quoteY = dishY + 16 + altsH;
+  const quoteH = 42;
+  const confY = quoteY + quoteH + 12;
+  const confBoxH = topPairsStr ? 46 : 28;
+  const divY = confY + confBoxH + 14;
+  const qrBoxY = divY + 14;
+  const qrX = cardX + 20;
+  const qrSize = 88;
+  const noticeY = qrBoxY + qrSize + 22;
+
+  // The bottom of the ticket is exactly 18px below the notice! Zero dead whitespace!
+  const cardH = (noticeY - cardY) + 18;
+  const h = cardY + cardH + toothH + 28;
+
   const canvas = document.createElement('canvas');
   const dpr = 2;
-  const w = 420;
-  const h = 600;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
@@ -246,14 +301,62 @@ export function saveShareImage() {
   ctx.fillStyle = '#D1DCD6';
   ctx.fillRect(0, 0, w, h);
 
-  const cardX = 30;
-  const cardY = 24;
-  const cardW = 360;
-  const cardH = 530;
-  const toothW = 15;
-  const toothH = 9;
+  // 1. TOP MACHINE HEADER
+  ctx.fillStyle = '#243028';
+  ctx.fillRect(0, 0, w, 56);
+  ctx.fillStyle = '#1E2721';
+  ctx.fillRect(0, 54, w, 2);
 
-  // Paper shadow
+  if (logoImg.complete && logoImg.naturalWidth > 0) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(36, 28, 14, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(logoImg, 22, 14, 28, 28);
+    ctx.restore();
+  }
+
+  // Title "吃什么"
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '800 18px -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(getCopy('brand.name', '吃什么'), 60, 34);
+
+  // Subtitle (No repeated "吃什么")
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#9CA3AF';
+  ctx.fillText(getCopy('brand.poster_subtitle', '随性就餐决策 · SYSTEM 1 MODEL'), 125, 33);
+
+  // 2. CRAVING INPUT ZONE (诉求投币口)
+  ctx.fillStyle = '#1A241E';
+  ctx.font = '800 11.5px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(getCopy('input.label', '诉求投币口'), 24, cravingBoxY + 13);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.roundRect(24, cravingBoxY + 20, cardW, cravingH, 6);
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#1E2721';
+  ctx.stroke();
+
+  ctx.fillStyle = '#141A16';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText(displayCraving, 36, cravingBoxY + 48);
+
+  // 3. DISPENSER SLIT (出票导槽: 充足间距，绝不压边)
+  ctx.textAlign = 'center';
+  ctx.font = '800 9.5px sans-serif';
+  ctx.fillStyle = '#59675F';
+  ctx.fillText(getCopy('input.dispenser_slot', '▼ 出票导槽 ▼'), w / 2, labelY);
+
+  ctx.fillStyle = '#1E2721';
+  ctx.beginPath();
+  ctx.roundRect(36, slitY, w - 72, 8, 4);
+  ctx.fill();
+
+  // 4. THERMAL RECEIPT TICKET (Dynamic tight card!)
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,0.12)';
   ctx.beginPath();
@@ -261,7 +364,6 @@ export function saveShareImage() {
   ctx.fill();
   ctx.restore();
 
-  // Unified Paper Card with Sawtooth path
   ctx.beginPath();
   ctx.moveTo(cardX, cardY + 6);
   ctx.arcTo(cardX, cardY, cardX + 6, cardY, 6);
@@ -269,7 +371,6 @@ export function saveShareImage() {
   ctx.arcTo(cardX + cardW, cardY, cardX + cardW, cardY + 6, 6);
   ctx.lineTo(cardX + cardW, cardY + cardH);
 
-  // Sawtooth bottom from right to left
   const teeth = Math.round(cardW / toothW);
   for (let i = teeth; i > 0; i--) {
     const rx = cardX + (i - 0.5) * toothW;
@@ -280,6 +381,7 @@ export function saveShareImage() {
   ctx.lineTo(cardX, cardY + 6);
   ctx.closePath();
 
+  // Pure White Ticket Fill!
   ctx.fillStyle = '#FFFFFF';
   ctx.fill();
   ctx.lineWidth = 2;
@@ -307,52 +409,39 @@ export function saveShareImage() {
   ctx.fillText(getCopy('ticket.header_brand', '吃什么 · 专属餐券'), cardX + cardW / 2, cardY + 28);
   ctx.font = '10px monospace';
   ctx.fillStyle = '#59675F';
-  ctx.fillText(timeStr, cardX + cardW / 2, cardY + 44);
+  ctx.fillText(timeStr, cardX + cardW / 2, headerTimeY);
 
-  // Dashed divider
+  // Dashed line
   ctx.strokeStyle = '#D1D5DB';
   ctx.setLineDash([3, 3]);
   ctx.beginPath();
-  ctx.moveTo(cardX + 16, cardY + 58);
-  ctx.lineTo(cardX + cardW - 16, cardY + 58);
+  ctx.moveTo(cardX + 16, cardY + 56);
+  ctx.lineTo(cardX + cardW - 16, cardY + 56);
   ctx.stroke();
   ctx.setLineDash([]);
 
   // Dish Title
   ctx.fillStyle = '#141A16';
   ctx.font = '900 28px sans-serif';
-  ctx.fillText(dish, cardX + cardW / 2, cardY + 104);
+  ctx.fillText(dish, cardX + cardW / 2, dishY);
 
   // Alternatives
   if (alts.length > 0) {
     ctx.fillStyle = '#59675F';
     ctx.font = '12px sans-serif';
-    ctx.fillText(`${getCopy('ticket.labels.alternatives_prefix', '备选:')} ${alts.join('、')}`, cardX + cardW / 2, cardY + 128);
+    ctx.fillText(`${getCopy('ticket.labels.alternatives_prefix', '备选:')} ${alts.join('、')}`, cardX + cardW / 2, cardY + 120);
   }
 
   // Quote Box
-  const quoteY = alts.length > 0 ? cardY + 144 : cardY + 126;
   ctx.fillStyle = '#F9FAFB';
-  ctx.fillRect(cardX + 16, quoteY, cardW - 32, 44);
+  ctx.fillRect(cardX + 16, quoteY, cardW - 32, quoteH);
   ctx.fillStyle = '#374151';
   ctx.font = '12px sans-serif';
   ctx.textAlign = 'center';
   const displayMsg = msg.length > 24 ? msg.slice(0, 24) + '...' : msg;
-  ctx.fillText('“' + displayMsg + '”', cardX + cardW / 2, quoteY + 26);
+  ctx.fillText(`“${displayMsg}”`, cardX + cardW / 2, quoteY + 25);
 
-  // Confidence & Distribution Box
-  const probs = data.probabilities && Object.keys(data.probabilities).length > 0 ? data.probabilities : null;
-  let topPairsStr = '';
-  if (probs) {
-    topPairsStr = Object.entries(probs)
-      .sort((a,b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([k,v]) => `${k}: ${(v*100).toFixed(0)}%`)
-      .join('  |  ');
-  }
-
-  const confY = quoteY + 56;
-  const confBoxH = topPairsStr ? 46 : 28;
+  // Confidence Box
   ctx.fillStyle = '#F3F4F6';
   ctx.fillRect(cardX + 16, confY, cardW - 32, confBoxH);
   ctx.strokeStyle = '#D1D5DB';
@@ -368,16 +457,14 @@ export function saveShareImage() {
   ctx.textAlign = 'right';
   ctx.fillText(`${Math.round(conf * 100)}%`, cardX + cardW - 26, confY + 18);
 
-  if (topPairsStr) {
-    ctx.textAlign = 'left';
-    ctx.font = '10px sans-serif';
-    ctx.fillStyle = '#59675F';
-    const distPrefix = getCopy('ticket.labels.distribution', '候选分布:');
-    ctx.fillText(`${distPrefix} ${topPairsStr}`, cardX + 26, confY + 36);
-  }
+  ctx.textAlign = 'left';
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = '#59675F';
+  const distPrefix = getCopy('ticket.labels.distribution', '候选分布:');
+  ctx.fillText(`${distPrefix} ${topPairsStr || '置信决策'}`, cardX + 26, confY + 36);
 
-  // Dashed divider
-  const divY = confY + confBoxH + 14;
+  // Divider
+  ctx.strokeStyle = '#D1D5DB';
   ctx.setLineDash([3, 3]);
   ctx.beginPath();
   ctx.moveTo(cardX + 16, divY);
@@ -385,10 +472,7 @@ export function saveShareImage() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // QR Code & Meta Section (Crisp, High-Resolution 90px QR)
-  const qrBoxY = divY + 14;
-  const qrX = cardX + 18;
-  const qrSize = 90;
+  // QR Code & Meta Section (Crisp 88px QR)
 
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(qrX, qrBoxY, qrSize, qrSize);
@@ -399,10 +483,6 @@ export function saveShareImage() {
   try {
     const matrix = createQRCodeMatrix(shareUrl);
     const mLen = matrix.length;
-    const pad = 4;
-    const avail = qrSize - pad * 2;
-
-    // 1:1 Pixel Buffer with Nearest-Neighbor rendering (zero-blur, crisp hard edges)
     const qrCanvas = document.createElement('canvas');
     qrCanvas.width = mLen;
     qrCanvas.height = mLen;
@@ -422,13 +502,13 @@ export function saveShareImage() {
 
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(qrCanvas, qrX + pad, qrBoxY + pad, avail, avail);
+    ctx.drawImage(qrCanvas, qrX + 4, qrBoxY + 4, qrSize - 8, qrSize - 8);
     ctx.restore();
   } catch (qrErr) {
     console.warn('Canvas QR render fallback:', qrErr);
   }
 
-  // Meta Text (Aligned with 90px QR)
+  // Meta Text
   const metaX = qrX + qrSize + 14;
   ctx.textAlign = 'left';
   ctx.font = 'bold 10px monospace';
@@ -451,7 +531,7 @@ export function saveShareImage() {
   ctx.textAlign = 'center';
   ctx.font = '9.5px sans-serif';
   ctx.fillStyle = '#59675F';
-  ctx.fillText(getCopy('ticket.labels.notice', '※ 凭此券准时就餐 · 建议趁热享用 ※'), cardX + cardW / 2, qrBoxY + qrSize + 22);
+  ctx.fillText(getCopy('ticket.labels.notice', '※ 凭此券准时就餐 · 建议趁热享用 ※'), cardX + cardW / 2, noticeY);
 
   const a = document.createElement('a');
   a.download = `fork-cast-${dish}.png`;
